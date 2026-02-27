@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopify Partner Intelligence Dashboard — UK Agency Partners</title>
+  <meta name="description" content="Partner Intelligence Dashboard for UK Agency Partners. Report ID: 00OG000005a8NZ2AY">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23008060'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18' font-weight='bold'>S</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ============================================
+     HEADER
+     ============================================ -->
+<header class="dashboard-header" role="banner">
+  <div class="header-inner">
+    <div class="header-brand">
+      <svg viewBox="0 0 109.5 124.5" fill="white" aria-hidden="true">
+        <path d="M95.6 24.2c-.1-.8-.7-1.2-1.2-1.2-.5 0-10.8-.2-10.8-.2s-7.2-7-8-7.8c-.8-.8-2.3-.5-2.9-.4-.1 0-1.5.5-4.1 1.3-2.4-7-6.7-13.4-14.2-13.4h-.7C51.6.8 49.4 0 47.5 0 29.6 0 21 22.5 18.3 33.9c-7 2.2-12 3.7-12.6 3.9C2.4 38.8 2.3 39 2 42L0 124.5l75.6 13 33.9-8.4S95.7 25 95.6 24.2zM68.2 17.5l-5.5 1.7c0-3.4-.5-8.2-1.9-12.2 4.8 1 7.1 6.3 7.4 10.5zM56.5 20.1l-11.8 3.7c1.1-4.4 3.3-8.8 5.9-11.7 1-.9 2.3-2 3.9-2.6 1.5 3.2 2 7.7 2 10.6zM47.6 3.4c1.3 0 2.3.3 3.2.7-1.5.8-2.9 1.9-4.3 3.5-3.5 3.9-6.2 9.9-7.2 15.7l-9.8 3C32 16.4 38.5 3.4 47.6 3.4z"/>
+        <path d="M94.4 23c-.5 0-10.8-.2-10.8-.2s-7.2-7-8-7.8c-.3-.3-.6-.4-1-.4L75.6 137.5l33.9-8.4S95.7 25 95.6 24.2c-.1-.8-.7-1.2-1.2-1.2z" fill="rgba(255,255,255,0.3)"/>
+        <path d="M59.4 43.7l-5.1 15.1s-4.4-2.4-9.8-2.4c-7.9 0-8.3 5-8.3 6.2 0 6.8 17.8 9.4 17.8 25.4 0 12.6-8 20.7-18.7 20.7-12.9 0-19.5-8-19.5-8l3.5-11.4s6.8 5.8 12.5 5.8c3.7 0 5.3-2.9 5.3-5.1 0-8.9-14.6-9.3-14.6-23.9 0-12.3 8.8-24.2 26.7-24.2 6.9-.1 10.2 2 10.2 2z" fill="white"/>
+      </svg>
+      <div class="header-title">
+        <h1>Partner Intelligence Dashboard</h1>
+        <div class="subtitle">UK Agency Partners — Enterprise Tier • Last 2 Years (Feb 2024 – Feb 2026)</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Report ID:</strong> 00OG000005a8NZ2AY</div>
+      <div><strong>Prepared for:</strong> Shiv Patel, Sales Large</div>
+      <div><strong>Updated:</strong> <span id="lastUpdated"></span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================
+     NAVIGATION TABS
+     ============================================ -->
+<nav class="nav-tabs" role="navigation" aria-label="Dashboard sections">
+  <div class="nav-inner">
+    <button class="nav-tab active" data-section="sec-overview" aria-current="page">📊 Executive Summary</button>
+    <button class="nav-tab" data-section="sec-table">📋 Partner Comparison</button>
+    <button class="nav-tab" data-section="sec-deals">🏆 Top Deals</button>
+    <button class="nav-tab" data-section="sec-geo">🌍 Geographic</button>
+    <button class="nav-tab" data-section="sec-timeline">⏱ Launch Timeline</button>
+    <button class="nav-tab" data-section="sec-reps">👥 Sales Reps</button>
+    <button class="nav-tab" data-section="sec-cards">🃏 Partner Details</button>
+  </div>
+</nav>
+
+<!-- ============================================
+     MAIN CONTENT
+     ============================================ -->
+<main class="dashboard-main" role="main">
+
+  <!-- ==========================================
+       SECTION 1: EXECUTIVE SUMMARY
+       ========================================== -->
+  <section id="sec-overview" class="section active" aria-label="Executive Summary">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Executive Summary</h2>
+        <p class="section-subtitle">Key performance indicators across all 9 UK Agency Partners</p>
+      </div>
+    </div>
+
+    <div id="kpi-grid" class="kpi-grid" aria-label="Key metrics"></div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Merchants by Partner</h3>
+        <div class="chart-subtitle">Active partners, last 2 years</div>
+        <canvas id="merchantsByPartnerChart" aria-label="Bar chart showing merchant count per partner"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>L365d GMV by Partner</h3>
+        <div class="chart-subtitle">Total gross merchandise value (last 365 days)</div>
+        <canvas id="gmvByPartnerChart" aria-label="Horizontal bar chart showing GMV per partner"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 2: PARTNER COMPARISON TABLE
+       ========================================== -->
+  <section id="sec-table" class="section" aria-label="Partner Comparison Table">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Partner Comparison</h2>
+        <p class="section-subtitle">Sort and filter all 9 partners by key metrics</p>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4 4"/></svg>
+          <input type="text" id="table-search" placeholder="Search partners..." aria-label="Search partners">
+        </div>
+        <div class="toolbar-actions">
+          <select id="filter-rep" class="filter-select" aria-label="Filter by sales rep">
+            <option value="">All Sales Reps</option>
+            <option value="John Roberts">John Roberts</option>
+            <option value="Yael Weiss">Yael Weiss</option>
+            <option value="Luca Santinelli">Luca Santinelli</option>
+          </select>
+          <select id="filter-status" class="filter-select" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
+          <button class="btn btn-primary" id="export-csv" aria-label="Export as CSV">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14v3h14v-3M10 3v10M6 9l4 4 4-4"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table" id="partner-table" aria-label="Partner comparison data">
+          <thead>
+            <tr>
+              <th data-field="partner_name">Partner <span class="sort-icon">⇅</span></th>
+              <th data-field="status">Status <span class="sort-icon">⇅</span></th>
+              <th data-field="recent_merchant_count" class="text-right">Recent <span class="sort-icon">⇅</span></th>
+              <th data-field="all_time_merchants" class="text-right">All-Time <span class="sort-icon">⇅</span></th>
+              <th data-field="total_gmv" class="text-right">L365d GMV <span class="sort-icon">⇅</span></th>
+              <th data-field="avg_contract" class="text-right">Avg Contract <span class="sort-icon">⇅</span></th>
+              <th data-field="avg_launch" class="text-right">Avg Launch <span class="sort-icon">⇅</span></th>
+              <th data-field="geo">Geo <span class="sort-icon">⇅</span></th>
+              <th data-field="rep">Sales Rep <span class="sort-icon">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody id="partner-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 3: TOP DEALS LEADERBOARD
+       ========================================== -->
+  <section id="sec-deals" class="section" aria-label="Top Deals">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Top Deals Leaderboard</h2>
+        <p class="section-subtitle">Largest deals by contract value across all partners</p>
+      </div>
+    </div>
+
+    <div class="leaderboard" id="top-deals-list" aria-label="Top deals ranked by value"></div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 4: GEOGRAPHIC DISTRIBUTION
+       ========================================== -->
+  <section id="sec-geo" class="section" aria-label="Geographic Distribution">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Geographic Distribution</h2>
+        <p class="section-subtitle">Merchant locations across 11 countries</p>
+      </div>
+    </div>
+
+    <div class="geo-grid">
+      <div class="geo-chart-card">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;">Merchants by Country</h3>
+        <p style="font-size:0.78rem;color:var(--shopify-gray-500);margin-bottom:12px;">46 merchants, 11 countries — GB dominates at 57%</p>
+        <div id="geo-bars" class="geo-bar-container"></div>
+      </div>
+      <div class="geo-chart-card">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;">Distribution Chart</h3>
+        <p style="font-size:0.78rem;color:var(--shopify-gray-500);margin-bottom:12px;">Visual breakdown of merchant geography</p>
+        <canvas id="geoDonutChart" aria-label="Doughnut chart showing geographic distribution"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 5: LAUNCH TIMELINE
+       ========================================== -->
+  <section id="sec-timeline" class="section" aria-label="Launch Timeline Analysis">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Launch Timeline Analysis</h2>
+        <p class="section-subtitle">Deal close → Go-live timeline for merchants with launch data (13 of 46)</p>
+      </div>
+    </div>
+
+    <div id="timeline-stats" class="timeline-stats" aria-label="Launch timeline summary stats"></div>
+
+    <div class="charts-grid" style="margin-bottom:24px;">
+      <div class="chart-card">
+        <h3>Average Time to Launch by Partner</h3>
+        <div class="chart-subtitle">Partners with available launch data • <span style="color:#008060;">■</span> ≤120d  <span style="color:#b98900;">■</span> 121-180d  <span style="color:#d72c0d;">■</span> >180d</div>
+        <canvas id="launchByPartnerChart" aria-label="Bar chart showing average launch time per partner"></canvas>
+      </div>
+    </div>
+
+    <div class="launch-timeline-container">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;">Individual Merchant Launch Timelines</h3>
+      <p style="font-size:0.78rem;color:var(--shopify-gray-500);margin-bottom:16px;">Sorted from fastest to slowest — Green ≤90d • Yellow 91-180d • Red >180d</p>
+      <div id="launch-bars" aria-label="Individual merchant launch timeline bars"></div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 6: SALES REP VIEW
+       ========================================== -->
+  <section id="sec-reps" class="section" aria-label="Sales Rep Coverage">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Sales Rep Coverage</h2>
+        <p class="section-subtitle">Partners grouped by Partner Solutions Manager (PSM)</p>
+      </div>
+    </div>
+
+    <div class="rep-cards" id="rep-cards" aria-label="Sales rep partner cards"></div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 7: PARTNER DETAIL CARDS
+       ========================================== -->
+  <section id="sec-cards" class="section" aria-label="Partner Detail Cards">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Partner Detail Cards</h2>
+        <p class="section-subtitle">Expand each card for full contact info, merchant lists, and deal history</p>
+      </div>
+    </div>
+
+    <div class="partner-cards-grid" id="partner-cards" aria-label="Expandable partner detail cards"></div>
+  </section>
+
+</main>
+
+<!-- ============================================
+     FOOTER
+     ============================================ -->
+<footer class="dashboard-footer" role="contentinfo">
+  <p>Shopify Partner Intelligence Dashboard • Generated by Partner Intelligence Swarm</p>
+  <p>Data sourced from Salesforce Report 00OG000005a8NZ2AY & Shopify Data Warehouse • Confidential — Internal Use Only</p>
+</footer>
+
+<!-- ============================================
+     EMBEDDED DATA
+     ============================================ -->
+<script>
+const MERCHANT_DATA = {"report_metadata":{"salesforce_report_id":"00OG000005a8NZ2AY","analysis_date":"2026-02-27","time_window":"2024-02-27 to 2026-02-27","partners_analyzed":9,"partners_with_activity":6,"partners_no_activity":3,"total_merchants_found":46},"partners":[{"partner_id":75432,"partner_name":"Swanky UKI","partner_name_in_db":"Swanky","all_time_merchants":151,"recent_merchant_count":29,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"Cakesmiths","domain":"www.cakesmiths.com","gmv_usd_l365d":13792053.86,"deal_amount_usd":7897196.0,"close_date":"2024-12-31","country_code":"GB"},{"shop_name":"My Clothing","domain":"myclothing.com","gmv_usd_l365d":8072709.85,"deal_amount_usd":null,"close_date":null,"country_code":"GB"},{"shop_name":"Computer Lounge","domain":"computerlounge.co.nz","gmv_usd_l365d":5104497.96,"deal_amount_usd":9508083.33,"close_date":"2024-03-26","country_code":"NZ"}],"geographic_focus":{"AU":{"merchant_count":3,"total_gmv_l365d_usd":3973324.31},"CA":{"merchant_count":1,"total_gmv_l365d_usd":1040390.48},"DE":{"merchant_count":2,"total_gmv_l365d_usd":3553262.29},"ES":{"merchant_count":1,"total_gmv_l365d_usd":2539585.52},"GB":{"merchant_count":13,"total_gmv_l365d_usd":34048240.86},"IE":{"merchant_count":2,"total_gmv_l365d_usd":6470238.27},"NZ":{"merchant_count":2,"total_gmv_l365d_usd":5785377.64},"SG":{"merchant_count":1,"total_gmv_l365d_usd":1656287.5},"US":{"merchant_count":4,"total_gmv_l365d_usd":3307560.82}},"average_contract_value_usd":3218013.3,"launch_timeline_metrics":{"avg_days_to_launch":215.7,"median_days_to_launch":235.0,"merchants_with_launch_date":6,"merchants_without_launch_date":23},"merchants":[{"shop_id":81446043982,"shop_name":"Cakesmiths","domain":"www.cakesmiths.com","company_name":null,"country_code":"GB","city":"Bristol","is_plus_shop":true,"shop_motion":"Opportunity - Winning Partner (OPR)","succeeded_at":"2024-12-31","deal_name":"Cakesmiths - #Signed","close_date":"2024-12-31","deal_amount_usd":7897196.0,"total_acv_amount_usd":0.0,"market_segment":"Mid Market","primary_product_interest":"Plus","launch_date":null,"launch_status":"Closed","days_to_launch":null,"gmv_usd_l365d":13792053.86,"gmv_usd_l90d":8131465.11,"gmv_usd_l30d":2976734.01,"revenue_usd_365d":184023.87},{"shop_id":61100982485,"shop_name":"My Clothing","domain":"myclothing.com","company_name":"My Clothing Limited","country_code":"GB","city":"Wolverhampton","is_plus_shop":false,"shop_motion":"Opportunity - Winning Partner (OPR)","succeeded_at":"2025-11-06","deal_name":null,"close_date":null,"deal_amount_usd":null,"gmv_usd_l365d":8072709.85,"gmv_usd_l90d":809256.88,"gmv_usd_l30d":307129.48,"revenue_usd_365d":151616.28,"launch_date":null,"days_to_launch":null},{"shop_id":59693006963,"shop_name":"Computer Lounge","domain":"computerlounge.co.nz","company_name":"PSG Ltd T/A Computer Lounge","country_code":"NZ","city":"Auckland","is_plus_shop":true,"close_date":"2024-03-26","deal_amount_usd":9508083.33,"launch_date":"2024-11-04","days_to_launch":223,"gmv_usd_l365d":5104497.96,"revenue_usd_365d":37309.97},{"shop_id":69995167977,"shop_name":"blocout","domain":"blocout.com","company_name":"FOURDS LIMITED","country_code":"GB","city":"Magherafelt","is_plus_shop":true,"close_date":"2024-12-13","deal_amount_usd":2102291.0,"launch_date":"2025-01-06","days_to_launch":24,"gmv_usd_l365d":5064417.25,"revenue_usd_365d":126825.31},{"shop_id":82904875306,"shop_name":"Fetch Your Pet Needs","domain":"www.fetchyourpetneeds.ie","company_name":null,"country_code":"IE","city":"Mountmellick","is_plus_shop":true,"close_date":"2024-12-04","deal_amount_usd":315156.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":3926184.63,"revenue_usd_365d":98070.56},{"shop_id":9397043260,"shop_name":"Infused energy","domain":"infusedenergy.shop","company_name":"Infused energy tea blends GmbH","country_code":"DE","city":"Siershahn","is_plus_shop":true,"close_date":"2024-03-29","deal_amount_usd":2000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":3453663.23,"revenue_usd_365d":68186.33},{"shop_id":87884726575,"shop_name":"Pawprint Oxygen","domain":"pawprintoxygen.com","country_code":"US","city":"Pittsburgh","is_plus_shop":true,"close_date":"2024-05-10","deal_amount_usd":866792.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":3157220.09,"revenue_usd_365d":111114.19},{"shop_id":93118562584,"shop_name":"Good Riddance","domain":"goodriddance.com.au","company_name":"Good Riddance Insect Repellent","country_code":"AU","city":"Braeside","is_plus_shop":true,"close_date":"2025-06-30","deal_amount_usd":69000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":3100848.68,"revenue_usd_365d":42858.06},{"shop_id":91624112465,"shop_name":"WeightWorld DK","domain":"www.weightworld.dk","company_name":"COMFORT CLICK LIMITED","country_code":"IE","city":"Clonmel","is_plus_shop":true,"close_date":"2025-03-24","deal_amount_usd":25507922.22,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":2544053.64,"revenue_usd_365d":118654.64},{"shop_id":51898745012,"shop_name":"Apparell\u2122","domain":"apparell.com","company_name":"COULTURE SL","country_code":"ES","city":"Granada","is_plus_shop":true,"close_date":"2025-01-31","deal_amount_usd":2108.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":2539585.52,"revenue_usd_365d":85729.43},{"shop_id":70168805600,"shop_name":"Humes Outfitters","domain":"www.ahume.co.uk","country_code":"GB","city":"Kelso","is_plus_shop":true,"close_date":"2024-06-25","deal_amount_usd":3331144.33,"launch_date":"2025-02-27","days_to_launch":247,"gmv_usd_l365d":2357531.42,"revenue_usd_365d":97945.03},{"shop_id":79810920715,"shop_name":"Rieker.co.uk","domain":"www.rieker.co.uk","company_name":"Brevitt-Rieker Ltd","country_code":"GB","city":"Market Harborough","is_plus_shop":true,"close_date":"2025-08-28","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":2222513.3,"revenue_usd_365d":48047.65},{"shop_id":56477286464,"shop_name":"1855 The Bottle Shop Pte Ltd","domain":"www.1855thebottleshop.com","country_code":"SG","city":"Singapore","is_plus_shop":true,"close_date":"2024-05-09","deal_amount_usd":2300.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":1656287.5,"revenue_usd_365d":73625.45},{"shop_id":85265154375,"shop_name":"Moonlight Design","domain":"www.moonlightdesign.co.uk","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2025-04-02","deal_amount_usd":2102108.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":1451719.5,"revenue_usd_365d":42424.93},{"shop_id":63990235236,"shop_name":"Remington Medical","domain":"remingtonmedical.com","company_name":"Remington Medical","country_code":"CA","city":"Markham","is_plus_shop":false,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":1040390.48,"revenue_usd_365d":22583.44},{"shop_id":70139281664,"shop_name":"Hilton Herbs","domain":"www.hiltonherbs.com","company_name":"Hilton Herbs","country_code":"GB","city":"Somerset","is_plus_shop":true,"close_date":"2024-06-28","deal_amount_usd":1367108.0,"launch_date":"2024-09-27","days_to_launch":91,"gmv_usd_l365d":1025246.26,"revenue_usd_365d":55559.52},{"shop_id":71429947529,"shop_name":"Ecostore","domain":"ecostore.com","country_code":"NZ","city":"Auckland","is_plus_shop":true,"close_date":"2025-08-01","deal_amount_usd":69000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":680879.68,"revenue_usd_365d":13991.65},{"shop_id":26926350469,"shop_name":"Bands of Courage","domain":"bandsofcourage.com","company_name":"Bagheera Pty Ltd","country_code":"AU","city":"Manly","is_plus_shop":true,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":459085.09,"revenue_usd_365d":24462.33},{"shop_id":93970596139,"shop_name":"Motto AU","domain":"www.motto.com.au","company_name":"Motto Fashions","country_code":"AU","city":"Alphington","is_plus_shop":true,"close_date":"2025-12-17","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":413390.54,"revenue_usd_365d":4860.82},{"shop_id":67099918436,"shop_name":"Microbiome Labs","domain":"checkout.privatelabel.microbiomelabs.com","country_code":"US","city":"Orlando","is_plus_shop":false,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":150340.73,"revenue_usd_365d":6441.69},{"shop_id":83676561754,"shop_name":"Lily's Kitchen Europe GmbH","domain":"www.lilyskitchen.com","company_name":"Lily's Kitchen Europe GmbH","country_code":"DE","city":"Frankfurt Am Main","is_plus_shop":true,"close_date":"2024-06-17","deal_amount_usd":2108.33,"launch_date":"2025-07-16","days_to_launch":394,"gmv_usd_l365d":99599.06,"revenue_usd_365d":74026.71},{"shop_id":85560426801,"shop_name":"curiospace","domain":"curio.space","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2024-05-22","deal_amount_usd":55007.66,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":60114.4,"revenue_usd_365d":31557.39},{"shop_id":98458141011,"shop_name":"Shop Diforti","domain":"shop.diforti.com","company_name":"Diforti","country_code":"GB","city":"Radlett","is_plus_shop":true,"close_date":"2025-11-20","deal_amount_usd":27500.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":1935.02,"revenue_usd_365d":8437.46},{"shop_id":86551036239,"shop_name":"The New You Plan","domain":"newyouplanshop.myshopify.com","country_code":"GB","is_plus_shop":false,"close_date":"2024-08-16","deal_amount_usd":10805348.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":0.0,"revenue_usd_365d":23412.29},{"shop_id":81109516619,"shop_name":"My Store","domain":"wiltonbradley.myshopify.com","country_code":"GB","is_plus_shop":true,"close_date":"2024-05-20","deal_amount_usd":9692333.0,"launch_date":"2025-03-31","days_to_launch":315,"gmv_usd_l365d":null,"revenue_usd_365d":113936.59},{"shop_id":74356031781,"shop_name":"Hatcocap","domain":"hatcocap.myshopify.com","country_code":"US","city":"Parkland","is_plus_shop":false,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":0.0},{"shop_id":90557219156,"shop_name":"My Store","domain":"2313bb-2a.myshopify.com","country_code":"GB","city":"Great Yarmouth","is_plus_shop":false,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":0.27},{"shop_id":97810481487,"shop_name":"Warren Evans Online","domain":"warren-evans-online.myshopify.com","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2025-12-19","deal_amount_usd":69000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":-8250.96},{"shop_id":74691543180,"shop_name":"Alexander Wang","domain":"enzjqm-j1.myshopify.com","country_code":"US","is_plus_shop":true,"close_date":"2025-12-29","deal_amount_usd":69000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":-8893.8}]},{"partner_id":416244,"partner_name":"Vervaunt","partner_name_in_db":"Vervaunt","all_time_merchants":26,"recent_merchant_count":8,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"Sch\u00f6ffel Country","domain":"www.schoffelcountry.com","gmv_usd_l365d":14132195.32,"deal_amount_usd":5787300.0,"close_date":"2024-05-31","country_code":"GB"},{"shop_name":"Lupine Lighting Systems GmbH","domain":"www.lupinelights.com","gmv_usd_l365d":2170152.36,"deal_amount_usd":75900.0,"close_date":"2025-07-11","country_code":"DE"},{"shop_name":"kurk.life","domain":"kurk.life","gmv_usd_l365d":1701023.02,"deal_amount_usd":2292.0,"close_date":"2024-09-23","country_code":"GB"}],"geographic_focus":{"DE":{"merchant_count":1,"total_gmv_l365d_usd":2170152.36},"GB":{"merchant_count":7,"total_gmv_l365d_usd":16120757.14}},"average_contract_value_usd":2065926.0,"launch_timeline_metrics":{"avg_days_to_launch":140.0,"median_days_to_launch":140.0,"merchants_with_launch_date":2,"merchants_without_launch_date":6},"merchants":[{"shop_id":81215816009,"shop_name":"Sch\u00f6ffel Country","domain":"www.schoffelcountry.com","company_name":"Bradshaw Taylor Ltd","country_code":"GB","city":"Oakham","is_plus_shop":true,"close_date":"2024-05-31","deal_amount_usd":5787300.0,"launch_date":"2024-08-01","days_to_launch":62,"gmv_usd_l365d":14132195.32,"revenue_usd_365d":305985.08},{"shop_id":92443115864,"shop_name":"Lupine Lighting Systems GmbH","domain":"www.lupinelights.com","country_code":"DE","city":"Neumarkt In Der Oberpfalz","is_plus_shop":true,"close_date":"2025-07-11","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":2170152.36,"revenue_usd_365d":27601.69},{"shop_id":62645829851,"shop_name":"kurk.life","domain":"kurk.life","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2024-09-23","deal_amount_usd":2292.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":1701023.02,"revenue_usd_365d":69933.83},{"shop_id":91067285883,"shop_name":"Lili Curia","domain":"www.lilicuria.com","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2025-06-25","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":212448.91,"revenue_usd_365d":17904.71},{"shop_id":89900384600,"shop_name":"Savoir Beds","domain":"www.savoirbeds.com","company_name":"Savoir Beds Limited","country_code":"GB","city":"London","is_plus_shop":true,"close_date":"2025-02-27","deal_amount_usd":2102300.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":75089.89,"revenue_usd_365d":29250.44},{"shop_id":92765389138,"shop_name":"Micro Scooters","domain":"microscooters-uk.myshopify.com","country_code":"GB","is_plus_shop":true,"close_date":"2024-12-31","deal_amount_usd":8331916.0,"launch_date":"2025-08-06","days_to_launch":218,"gmv_usd_l365d":null,"revenue_usd_365d":44358.87},{"shop_id":96146194815,"shop_name":"Sarah Raven","domain":"sarah-raven.myshopify.com","country_code":"GB","city":"Robertsbridge","is_plus_shop":true,"close_date":"2025-12-31","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":-2369.7},{"shop_id":101318787397,"shop_name":"Brora","domain":"broraonline.myshopify.com","country_code":"GB","is_plus_shop":true,"close_date":"2026-01-06","deal_amount_usd":75900.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":-2827.98}]},{"partner_id":557419,"partner_name":"CTI Digital","partner_name_in_db":"CTI Digital","all_time_merchants":10,"recent_merchant_count":1,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"VPZ | Vape E-Liquids, Kits and Coils","domain":"vpz.co.uk","gmv_usd_l365d":null,"deal_amount_usd":null,"close_date":null,"country_code":"GB"}],"geographic_focus":{"GB":{"merchant_count":1,"total_gmv_l365d_usd":0.0}},"average_contract_value_usd":null,"launch_timeline_metrics":{"avg_days_to_launch":null,"median_days_to_launch":null,"merchants_with_launch_date":0,"merchants_without_launch_date":1},"merchants":[{"shop_id":6948651097,"shop_name":"VPZ | Vape E-Liquids, Kits and Coils","domain":"vpz.co.uk","company_name":"CCHG Ltd","country_code":"GB","city":"Midlothian","is_plus_shop":false,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":577.0}]},{"partner_id":3185684,"partner_name":"KPS Digital Ltd","all_time_merchants":18,"recent_merchant_count":0,"status":"No recent activity (2024-2026)","merchants":[],"top_3_deals_by_gmv":[],"geographic_focus":{},"average_contract_value_usd":null,"launch_timeline_metrics":{"avg_days_to_launch":null,"median_days_to_launch":null,"merchants_with_launch_date":0,"merchants_without_launch_date":0}},{"partner_id":1926522,"partner_name":"FuseFabric","partner_name_in_db":"fusefabric","all_time_merchants":43,"recent_merchant_count":5,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"Fenwick","domain":"fenwick.co.uk","gmv_usd_l365d":24702677.73,"deal_amount_usd":35702108.33,"close_date":"2024-12-31","country_code":"GB"},{"shop_name":"Escentual","domain":"escentual.com","gmv_usd_l365d":24415016.79,"deal_amount_usd":46902291.66,"close_date":"2024-08-29","country_code":"GB"},{"shop_name":"Wholesale Body Jewellery","domain":"wholesalebodyjewellery.com","gmv_usd_l365d":5361839.72,"deal_amount_usd":3047234.0,"close_date":"2025-03-21","country_code":"GB"}],"geographic_focus":{"GB":{"merchant_count":4,"total_gmv_l365d_usd":54479534.24},"PL":{"merchant_count":1,"total_gmv_l365d_usd":0.0}},"average_contract_value_usd":31031221.78,"launch_timeline_metrics":{"avg_days_to_launch":121.2,"median_days_to_launch":134.0,"merchants_with_launch_date":4,"merchants_without_launch_date":1},"merchants":[{"shop_id":85707063630,"shop_name":"Fenwick","domain":"fenwick.co.uk","company_name":"Fenwick Limited","country_code":"GB","city":"Newcastle Upon Tyne","is_plus_shop":true,"close_date":"2024-12-31","deal_amount_usd":35702108.33,"launch_date":"2025-04-11","days_to_launch":101,"gmv_usd_l365d":24702677.73,"revenue_usd_365d":173850.61},{"shop_id":85318631748,"shop_name":"Escentual","domain":"escentual.com","company_name":"Escentual","country_code":"GB","city":"Cardiff","is_plus_shop":true,"close_date":"2024-08-29","deal_amount_usd":46902291.66,"launch_date":"2024-10-01","days_to_launch":33,"gmv_usd_l365d":24415016.79,"revenue_usd_365d":370104.06},{"shop_id":92833284441,"shop_name":"Wholesale Body Jewellery","domain":"wholesalebodyjewellery.com","company_name":"Body Jewellery Limited","country_code":"GB","city":"Poole","is_plus_shop":true,"close_date":"2025-03-21","deal_amount_usd":3047234.0,"launch_date":"2025-09-04","days_to_launch":167,"gmv_usd_l365d":5361839.72,"revenue_usd_365d":108238.76},{"shop_id":95135924548,"shop_name":"Pepco","domain":"pepco-prod-1.myshopify.com","country_code":"PL","city":"Pozna\u0144","is_plus_shop":true,"close_date":"2025-11-26","deal_amount_usd":30000.0,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":null,"revenue_usd_365d":8336.79},{"shop_id":92109111619,"shop_name":"JD Sports Size?","domain":"size-prod.myshopify.com","country_code":"GB","is_plus_shop":true,"close_date":"2024-12-31","deal_amount_usd":69474474.9,"launch_date":"2025-07-03","days_to_launch":184,"gmv_usd_l365d":null,"revenue_usd_365d":83100.3}]},{"partner_id":3399899,"partner_name":"WPP_EMEA - VMLY&R UKI","partner_name_in_db":"VML","all_time_merchants":2,"recent_merchant_count":1,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"The Optic Shop","domain":"www.theopticshop.co.uk","gmv_usd_l365d":374384.46,"deal_amount_usd":1752291.66,"close_date":"2025-03-31","country_code":"GB"}],"geographic_focus":{"GB":{"merchant_count":1,"total_gmv_l365d_usd":374384.46}},"average_contract_value_usd":1752291.66,"launch_timeline_metrics":{"avg_days_to_launch":null,"median_days_to_launch":null,"merchants_with_launch_date":0,"merchants_without_launch_date":1},"merchants":[{"shop_id":93456040277,"shop_name":"The Optic Shop","domain":"www.theopticshop.co.uk","country_code":"GB","city":"Bridgend","is_plus_shop":true,"close_date":"2025-03-31","deal_amount_usd":1752291.66,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":374384.46,"revenue_usd_365d":31458.74}]},{"partner_id":755423,"partner_name":"WPP_EMEA - Wunderman Thompson UKI","partner_name_in_db":"VML","all_time_merchants":18,"recent_merchant_count":2,"status":"Active","top_3_deals_by_gmv":[{"shop_name":"Body&Fit","domain":"www.bodyandfit.com","gmv_usd_l365d":23725683.96,"deal_amount_usd":40902108.33,"close_date":"2025-02-19","country_code":"NL"},{"shop_name":"Optimum Nutrition","domain":"www.optimumnutrition.com","gmv_usd_l365d":5317015.65,"deal_amount_usd":25708433.33,"close_date":"2025-02-19","country_code":"IE"}],"geographic_focus":{"IE":{"merchant_count":1,"total_gmv_l365d_usd":5317015.65},"NL":{"merchant_count":1,"total_gmv_l365d_usd":23725683.96}},"average_contract_value_usd":33305270.83,"launch_timeline_metrics":{"avg_days_to_launch":167.0,"median_days_to_launch":167.0,"merchants_with_launch_date":1,"merchants_without_launch_date":1},"merchants":[{"shop_id":93166600521,"shop_name":"Body&Fit","domain":"www.bodyandfit.com","company_name":"Body & Fit Sports Nutrition B.V.","country_code":"NL","city":"Heerenveen","is_plus_shop":true,"close_date":"2025-02-19","deal_amount_usd":40902108.33,"launch_date":"2025-08-05","days_to_launch":167,"gmv_usd_l365d":23725683.96,"revenue_usd_365d":184543.85},{"shop_id":79499919627,"shop_name":"Optimum Nutrition","domain":"www.optimumnutrition.com","company_name":"Glanbia Performance Nutrition Ltd","country_code":"IE","city":"Kilkenny","is_plus_shop":true,"close_date":"2025-02-19","deal_amount_usd":25708433.33,"launch_date":null,"days_to_launch":null,"gmv_usd_l365d":5317015.65,"revenue_usd_365d":223410.3}]},{"partner_id":4196451,"partner_name":"WPP_EMEA - AKQA UK","all_time_merchants":0,"recent_merchant_count":0,"status":"No recent activity (2024-2026)","merchants":[],"top_3_deals_by_gmv":[],"geographic_focus":{},"average_contract_value_usd":null,"launch_timeline_metrics":{"avg_days_to_launch":null,"median_days_to_launch":null,"merchants_with_launch_date":0,"merchants_without_launch_date":0}},{"partner_id":3775828,"partner_name":"Intellias","all_time_merchants":1,"recent_merchant_count":0,"status":"No recent activity (2024-2026)","merchants":[],"top_3_deals_by_gmv":[],"geographic_focus":{},"average_contract_value_usd":null,"launch_timeline_metrics":{"avg_days_to_launch":null,"median_days_to_launch":null,"merchants_with_launch_date":0,"merchants_without_launch_date":0}}],"overall_summary":{"total_active_partners":6,"total_merchants":46,"total_gmv_l365d_usd":164561795.5,"avg_gmv_per_merchant_l365d_usd":4701765.59,"avg_days_to_launch":171.2,"median_days_to_launch":167.0,"plus_shop_pct":84.8,"country_breakdown":{"GB":26,"US":4,"AU":3,"IE":3,"DE":3,"NZ":2,"CA":1,"NL":1,"ES":1,"PL":1,"SG":1}}};
+
+const SF_DATA = {"report_id":"00OOG000005a8NZ2AY","partners":[{"partner_id":"0018V00002kVs5jQAC","shopify_partner_id":"75432","name":"Swanky UKI","type":"Agency Partner","website":"http://swankyagency.com","location":"United Kingdom","primary_contact":{"name":"Dan Partridge","email":"dan.partridge@swankyagency.com","phone":"441392927070","title":"CEO"},"additional_contacts":[{"name":"Sean Clanchy","email":"sean@swankyagency.com"},{"name":"Catherine Partridge","email":"cat@swankyagency.com"},{"name":"Dan McIvor","email":"dan@swankyagency.com"},{"name":"Timothy Sumner","email":"tim@swankyagency.com"}],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Alexandra Nolan","email":"alexandra.nolan@shopify.com"},"total_merchant_count_alltime":151,"partnership_tier":"Enterprise","partner_since":"2023-12-13","parent_account":"Swanky"},{"partner_id":"0018V00002kVs7aQAC","shopify_partner_id":"416244","name":"Vervaunt","type":"Agency Partner","website":"http://vervaunt.com","location":"United Kingdom","primary_contact":{"name":"Sham Miah","email":"shamoli@vervaunt.com","phone":"447515398603","title":"Operations Director"},"additional_contacts":[{"name":"Paul Rogers","email":"paul@vervaunt.com"},{"name":"Joshua Hobson","email":"josh.hobson@vervaunt.com","title":"Growth Director"}],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Alexandra Nolan","email":"alexandra.nolan@shopify.com"},"total_merchant_count_alltime":26,"partnership_tier":"Enterprise","partner_since":"2023-12-13"},{"partner_id":"0018V00002loFrgQAE","shopify_partner_id":"557419","name":"CTI Digital","type":"Agency Partner","website":"http://ctidigital.com","location":"United Kingdom","primary_contact":{"name":"Paul Green","email":"p.green@ctidigital.com","title":"Chief Commercial Officer"},"additional_contacts":[{"name":"Abbey Robinson","email":"a.robinson@ctidigital.com","title":"Senior Account Manager"},{"name":"Michael Ashworth","email":"m.ashworth@ctidigital.com","title":"Ecommerce Sales Director"}],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Alexandra Nolan","email":"alexandra.nolan@shopify.com"},"total_merchant_count_alltime":10,"partnership_tier":"Enterprise","partner_since":"2024-02-15"},{"partner_id":"0018V00002uqVQ5QAM","shopify_partner_id":"3185684","name":"KPS Digital Ltd","type":"Agency Partner","website":"http://kps.com","location":"London, United Kingdom","primary_contact":{"name":"Stuart Lewis","email":"stuart.lewis@kps.com","phone":"+447834221753","title":"Head of Growth"},"additional_contacts":[{"name":"Barnaby Moffat","email":"barnaby.moffat@kps.com","title":"Commercial Director"},{"name":"Simon Holmes","email":"simon.holmes@kps.com","title":"Head of Development and Architecture"},{"name":"Duncan Paterson","email":"duncan.paterson@kps.com","title":"Business Manager"},{"name":"Tim Hillman","email":"tim.hillman@kps.com","title":"CTO"}],"sales_rep":{"name":"Yael Weiss","email":"yael.weissayalon@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Carlotta Zorzi","email":"carlotta.zorzi@shopify.com"},"total_merchant_count_alltime":18,"partnership_tier":"Enterprise","partner_since":"2024-07-11","parent_account":"KPS AG"},{"partner_id":"0018V00002kVsEvQAK","shopify_partner_id":"1926522","name":"FuseFabric","type":"Agency Partner","website":"http://fusefabric.com","location":"United Kingdom","primary_contact":{"name":"Simon Hamblin","email":"simon@fusefabric.com","phone":"+447949795080","title":"Director"},"additional_contacts":[{"name":"Adrienne Kuster","email":"adrienne.kuster@fusefabric.com"},{"name":"Joe Faithfull","email":"joe.faithfull@fusefabric.com"},{"name":"Govinder Rayt","email":"govinder.rayt@fusefabric.com"}],"sales_rep":{"name":"Yael Weiss","email":"yael.weissayalon@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Greg Higgins","email":"greg.higgins@shopify.com"},"total_merchant_count_alltime":43,"partnership_tier":"Enterprise","partner_since":"2023-12-13"},{"partner_id":"0018V00002kVs8ZQAS","shopify_partner_id":"3399899","name":"WPP_EMEA - VMLY&R UKI","type":"Agency Partner","website":"http://vml.com","location":"United Kingdom","primary_contact":{"name":"Tom Dixon","email":"tom.dixon@vml.com","phone":"+44793-168-7631"},"additional_contacts":[],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Igor Tolkachev","email":"igor.tolkachev@shopify.com"},"total_merchant_count_alltime":2,"partnership_tier":"Enterprise","partner_since":"2023-12-13","parent_account":"WPP EMEA"},{"partner_id":"0018V00002kVs8aQAC","shopify_partner_id":"755423","name":"WPP_EMEA - Wunderman Thompson UKI","type":"Agency Partner","location":"United Kingdom","primary_contact":{"name":"Scott Armstrong","email":"scott.armstrong@vml.com","phone":"(816) 283-0700","title":"Business & Growth Head (Shopify Coe)"},"additional_contacts":[{"name":"Jamie McKinney","email":"jamie.mckinney@wundermanthompson.com"},{"name":"Polly Row","email":"prow@salmon.com"},{"name":"Zena Aymach","email":"zena.aymach@vml.com","title":"Marketing Manager"}],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Igor Tolkachev","email":"igor.tolkachev@shopify.com"},"total_merchant_count_alltime":18,"partnership_tier":"Enterprise","partner_since":"2023-12-13","parent_account":"WPP EMEA"},{"partner_id":"0018V00002kVs8bQAC","shopify_partner_id":"4196451","name":"WPP_EMEA - AKQA UK","type":"Agency Partner","website":"http://akqa.com","location":"United Kingdom","primary_contact":null,"additional_contacts":[],"sales_rep":{"name":"John Roberts","email":"john.roberts@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Igor Tolkachev","email":"igor.tolkachev@shopify.com"},"total_merchant_count_alltime":0,"partnership_tier":"Enterprise","partner_since":"2023-12-13","parent_account":"WPP EMEA"},{"partner_id":"001OG000016yYUIYA2","shopify_partner_id":"3775828","name":"Intellias","type":"Agency Partner","website":"https://intellias.com/","location":"United Kingdom","primary_contact":{"name":"Myles Banbury","email":"myles.bunbury@intellias.com","phone":"13125832100","title":"Director"},"additional_contacts":[{"name":"Andrew Eliseev","email":"andrew.eliseev@intellias.com"}],"sales_rep":{"name":"Luca Santinelli","email":"luca.santinelli@shopify.com","role":"Partner Solutions Engineer"},"account_owner":{"name":"Marina Vavilova","email":"marina.vavilova@shopify.com"},"total_merchant_count_alltime":1,"partnership_tier":"Enterprise","partner_since":"2025-06-10"}]};
+</script>
+
+<script src="app.js"></script>
+<script>
+  // Initialize dashboard when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    initDashboard(MERCHANT_DATA, SF_DATA);
+  });
+</script>
+
+</body>
+</html>
