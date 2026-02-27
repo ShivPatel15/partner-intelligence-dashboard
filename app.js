@@ -83,14 +83,19 @@ function renderKPIs(data) {
       <div class="kpi-detail">Median: ${Math.round(summary.median_days_to_launch)} days</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Plus Shop Rate</div>
-      <div class="kpi-value">${fmt.pct(summary.plus_shop_pct)}</div>
-      <div class="kpi-detail">Enterprise-grade adoption</div>
+      <div class="kpi-label">Pipeline Value</div>
+      <div class="kpi-value">$11.0M</div>
+      <div class="kpi-detail">Active builds + pre-close opps</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Primary Market</div>
-      <div class="kpi-value">🇬🇧 UK</div>
-      <div class="kpi-detail">26 of 46 merchants (57%)</div>
+      <div class="kpi-label">Active Builds</div>
+      <div class="kpi-value">11</div>
+      <div class="kpi-detail">Won deals in implementation</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Stalled / Overdue</div>
+      <div class="kpi-value" style="color:var(--color-warning);">1 / 1</div>
+      <div class="kpi-detail">Allbeauty stalled • Kettlewell overdue</div>
     </div>
   `;
   document.getElementById('kpi-grid').innerHTML = kpiHTML;
@@ -618,6 +623,47 @@ function renderPartnerCards(data, sfPartners) {
     // Enrichment section
     const enrichmentHTML = buildEnrichmentHTML(enrichment);
 
+    // Pipeline/Capacity data for this partner
+    const capData = typeof CAPACITY_DATA !== 'undefined' ? CAPACITY_DATA.partners.find(c => p.partner_name.includes(c.name) || c.name.includes(displayName)) : null;
+    const pipeBuilds = typeof PIPELINE_DATA !== 'undefined' ? PIPELINE_DATA.active_builds.filter(b => p.partner_name.includes(b.partner) || b.partner.includes(displayName)) : [];
+    const pipeSales = typeof PIPELINE_DATA !== 'undefined' ? PIPELINE_DATA.sales_pipeline.find(s => p.partner_name.includes(s.partner) || s.partner.includes(displayName)) : null;
+    
+    // Active Builds section
+    let activeBuildsHTML = '';
+    if (pipeBuilds.length > 0) {
+      activeBuildsHTML = `
+        <h4>🔧 Active Builds (${pipeBuilds.length})</h4>
+        <div style="overflow-x:auto;">
+          <table class="merchant-mini-table">
+            <thead><tr><th>Deal</th><th>Stage</th><th>Close Date</th><th>Status</th></tr></thead>
+            <tbody>
+              ${pipeBuilds.map(b => {
+                const stageClass = b.stage === 'Build' ? 'stage-build' : b.stage === 'Launch' ? 'stage-launch' : 'stage-explore';
+                let statusIcon = '✅';
+                if (b.status === 'overdue') statusIcon = '⚠️';
+                else if (b.status === 'stalled') statusIcon = '🔴';
+                else if (b.status === 'warning') statusIcon = '⚠️';
+                return `<tr><td style="font-weight:600;">${b.deal}</td><td><span class="stage-badge ${stageClass}">${b.stage}</span></td><td>${fmt.date(b.close_date)}</td><td>${statusIcon} ${b.status_text}</td></tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    
+    // Pipeline Deals section
+    let pipelineDealsHTML = '';
+    if (pipeSales && pipeSales.deal_count > 0) {
+      pipelineDealsHTML = `
+        <h4>📈 Pipeline Deals (${pipeSales.deal_count} — ${fmt.currency(pipeSales.pipeline_value)})</h4>
+        <ul class="deal-list">
+          ${pipeSales.deals.slice(0, 5).map(d => `<li class="deal-item"><div class="deal-name">${d.name}</div><div class="deal-meta">${d.stage} • ${d.amount ? fmt.currency(d.amount) : 'TBD'} • Close: ${fmt.date(d.close)}</div></li>`).join('')}
+          ${pipeSales.deals.length > 5 ? `<li class="deal-item" style="color:var(--shopify-gray-500);font-size:0.78rem;">+ ${pipeSales.deals.length - 5} more deals</li>` : ''}
+        </ul>`;
+    }
+    
+    // Capacity badge
+    const capBadgeHTML = capData ? `<span class="capacity-indicator-badge cap-${capData.color}">${capData.available ? '✅' : capData.color === 'yellow' ? '⚠️' : '🔴'} ${capData.available_text} • ${capData.active_projects} active</span>` : '';
+
     return `
     <div class="partner-card" data-partner="${p.partner_id}">
       <div class="partner-card-header">
@@ -628,6 +674,7 @@ function renderPartnerCards(data, sfPartners) {
         <div class="partner-card-badges">
           <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}">${isActive ? 'Active' : 'Inactive'}</span>
           <span class="tier-badge ${tier.css}">${tier.label}</span>
+          ${capBadgeHTML}
         </div>
       </div>
 
@@ -669,6 +716,9 @@ function renderPartnerCards(data, sfPartners) {
       <div class="partner-expanded" id="expanded-${p.partner_id}">
         ${sf.partner_since ? `<div style="font-size:0.78rem;color:var(--shopify-gray-500);margin-top:8px;">Partner since ${fmt.date(sf.partner_since)} • Geo: ${geo}</div>` : ''}
 
+        ${activeBuildsHTML}
+        ${pipelineDealsHTML}
+        
         ${enrichmentHTML}
 
         ${contactsHTML ? `<h4>Contacts</h4><div class="contact-grid">${contactsHTML}</div>` : ''}
@@ -877,13 +927,41 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ---- AI Query Processing Engine ----
+// ---- AI Query Processing Engine (Enhanced with Pipeline & Capacity) ----
 function processAIQuery(query) {
   const q = query.toLowerCase().trim();
   const data = typeof MERCHANT_DATA !== 'undefined' ? MERCHANT_DATA : null;
   const enrichment = typeof ENRICHMENT_DATA !== 'undefined' ? ENRICHMENT_DATA : null;
 
   if (!data) return '<p>Data not loaded. Please refresh the page.</p>';
+
+  // NEW: Pipeline queries (check first for priority)
+  if (q.includes('pipeline') && !q.includes('about') && !q.includes('tell me')) {
+    // Check if partner-specific pipeline
+    const pMatch = findPartnerInQuery(q, data, enrichment);
+    if (pMatch) return handlePartnerPipeline(pMatch.name);
+    return handlePipelineSummary();
+  }
+
+  // NEW: Deals in build / active builds
+  if ((q.includes('build') || q.includes('in progress') || q.includes('implementation') || q.includes('active build')) && (q.includes('deal') || q.includes('what') || q.includes('show') || q.includes('build'))) {
+    return handleActiveBuilds();
+  }
+
+  // NEW: Stalled deals
+  if (q.includes('stall') || (q.includes('stuck') && q.includes('deal'))) {
+    return handleStalledDeals();
+  }
+
+  // NEW: Overdue deals
+  if (q.includes('overdue') || q.includes('late') || q.includes('behind schedule')) {
+    return handleOverdueDeals();
+  }
+
+  // NEW: Partner capacity / who has room
+  if (q.includes('capacity') || q.includes('who has room') || q.includes('workload') || q.includes('availability') || q.includes('available')) {
+    return handleCapacityQuery();
+  }
 
   // 1. Fastest launch
   if (q.includes('fastest') && (q.includes('launch') || q.includes('time'))) {
@@ -915,9 +993,12 @@ function processAIQuery(query) {
     return handleEnterprisePartner(data, enrichment);
   }
 
-  // 7. Tell me about [partner] / partner name queries
+  // 7. Tell me about [partner] / partner name queries (check for pipeline sub-query too)
   const partnerMatch = findPartnerInQuery(q, data, enrichment);
   if (partnerMatch) {
+    if (q.includes('pipeline') || q.includes('deal')) {
+      return handlePartnerPipeline(partnerMatch.name);
+    }
     return handlePartnerProfile(partnerMatch.name, data, enrichment);
   }
 
@@ -949,11 +1030,14 @@ function processAIQuery(query) {
   // Fallback
   return `<p>I wasn't able to find a specific answer for that question. Here are some things I can help with:</p>
     <ul>
-      <li><strong>Partner profiles</strong> — "Tell me about FuseFabric" or "Tell me about Swanky"</li>
+      <li><strong>Pipeline</strong> — "Show pipeline" or "KPS pipeline"</li>
+      <li><strong>Active builds</strong> — "What deals are in build?"</li>
+      <li><strong>Stalled / Overdue</strong> — "Stalled deals" or "Overdue deals"</li>
+      <li><strong>Capacity</strong> — "Partner capacity" or "Who has room?"</li>
+      <li><strong>Partner profiles</strong> — "Tell me about FuseFabric"</li>
       <li><strong>Comparisons</strong> — "Compare FuseFabric vs Swanky UKI"</li>
       <li><strong>Launch speed</strong> — "Which partner has the fastest time to launch?"</li>
       <li><strong>Top deals</strong> — "Show biggest deals by contract value"</li>
-      <li><strong>Inactive partners</strong> — "Show me inactive partners"</li>
       <li><strong>Tier recommendations</strong> — "What are the tier recommendations?"</li>
       <li><strong>Industry matches</strong> — "Which partners work with fashion brands?"</li>
     </ul>
@@ -1308,6 +1392,194 @@ function handleWPPQuery(data, enrichment) {
   return html;
 }
 
+// ---- NEW: Pipeline & Capacity AI Handlers ----
+
+function handlePipelineSummary() {
+  if (typeof PIPELINE_DATA === 'undefined') return '<p>Pipeline data not loaded.</p>';
+  const s = PIPELINE_DATA.summary;
+  
+  let html = `<p>📈 <strong>Pipeline Summary</strong></p>
+    <table class="chat-table">
+      <tr><td><strong>Total Pipeline Value</strong></td><td><span class="chat-highlight">${fmt.currency(s.total_pipeline_value_usd)}</span></td></tr>
+      <tr><td><strong>Active Builds</strong></td><td>${s.active_builds} deals (won, in implementation)</td></tr>
+      <tr><td><strong>Open Opportunities</strong></td><td>${s.open_opportunities} deals (${fmt.currency(s.pre_close_pipeline_usd)} pre-close)</td></tr>
+      <tr><td><strong>Stalled (>180d)</strong></td><td style="color:var(--color-danger);">${s.stalled_over_180d} — Allbeauty (FuseFabric, 609 days)</td></tr>
+      <tr><td><strong>Overdue Launches</strong></td><td style="color:var(--color-warning);">${s.overdue_launches} — Kettlewell (Swanky, 25 days overdue)</td></tr>
+    </table>`;
+  
+  html += `<p style="margin-top:10px;"><strong>Pipeline by Partner:</strong></p>
+    <table class="chat-table">
+      <tr><th>Partner</th><th>Active Builds</th><th>Open Opps</th><th>Total Pipeline</th></tr>`;
+  
+  const pipByPartner = [
+    { name: 'Swanky UKI', builds: 6, opps: 15, total: 8179470 },
+    { name: 'FuseFabric', builds: 3, opps: 3, total: 1598900 },
+    { name: 'Vervaunt', builds: 2, opps: 5, total: 565800 },
+    { name: 'VML (WT UKI)', builds: 0, opps: 2, total: 368000 },
+    { name: 'KPS Digital', builds: 0, opps: 6, total: 331200 },
+  ];
+  
+  pipByPartner.forEach(p => {
+    html += `<tr><td><strong>${p.name}</strong></td><td>${p.builds}</td><td>${p.opps}</td><td>${fmt.currency(p.total)}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<p style="margin-top:8px;">💡 <strong>Key insight:</strong> Swanky UKI dominates with $8.2M pipeline and 15 open opportunities, including JM Bullion ($4.5M Enterprise). KPS Digital has 6 pipeline deals but 0 completed Shopify deals — track conversion closely.</p>`;
+  
+  return html;
+}
+
+function handleActiveBuilds() {
+  if (typeof PIPELINE_DATA === 'undefined') return '<p>Pipeline data not loaded.</p>';
+  
+  let html = '<p>🔧 <strong>Active Builds & Launches</strong> — 11 deals in implementation</p>';
+  html += '<table class="chat-table"><tr><th>Partner</th><th>Deal</th><th>Stage</th><th>Days Since Close</th><th>Status</th></tr>';
+  
+  PIPELINE_DATA.active_builds.forEach(b => {
+    let statusIcon = '✅';
+    let statusColor = '';
+    if (b.status === 'overdue') { statusIcon = '⚠️'; statusColor = 'color:var(--color-warning);'; }
+    else if (b.status === 'stalled') { statusIcon = '🔴'; statusColor = 'color:var(--color-danger);'; }
+    else if (b.status === 'warning') { statusIcon = '⚠️'; statusColor = 'color:var(--color-warning);'; }
+    
+    html += `<tr>
+      <td><strong>${b.partner}</strong></td>
+      <td>${b.deal}</td>
+      <td>${b.stage}</td>
+      <td>${b.days_since_close}d</td>
+      <td style="${statusColor}font-weight:600;">${statusIcon} ${b.status_text}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  html += `<p style="margin-top:8px;">⚠️ <strong>Watch:</strong> Allbeauty (FuseFabric) is stalled at 609 days. Kettlewell (Swanky) expected launch was Feb 2 — 25 days overdue.</p>`;
+  
+  return html;
+}
+
+function handleStalledDeals() {
+  return `<p>🔴 <strong>Stalled Deals (>180 days)</strong></p>
+    <table class="chat-table">
+      <tr><th>Deal</th><th>Partner</th><th>Days Since Close</th><th>Deal Value</th><th>Details</th></tr>
+      <tr>
+        <td><strong>Allbeauty</strong></td>
+        <td>FuseFabric</td>
+        <td style="color:var(--color-danger);font-weight:700;">611 days</td>
+        <td>$2K</td>
+        <td>Closed Jun 2024. Only $5.3K GMV — not yet live. Expected launch pushed to Jun 2026.</td>
+      </tr>
+    </table>
+    <p style="margin-top:10px;"><strong>Recommendation:</strong> This deal needs urgent attention. 609 days in Build phase is excessive. Contact FuseFabric (Simon Hamblin) to get a status update and timeline commitment. Consider escalating if no progress by Q2 2026.</p>
+    <p style="margin-top:8px;">Note: Kettlewell (Swanky) is also approaching concern territory at 151 days since close with an overdue launch date.</p>`;
+}
+
+function handleOverdueDeals() {
+  return `<p>⚠️ <strong>Overdue Launches</strong></p>
+    <table class="chat-table">
+      <tr><th>Deal</th><th>Partner</th><th>Expected Launch</th><th>Days Overdue</th><th>Details</th></tr>
+      <tr>
+        <td><strong>Kettlewell</strong> (Refined Capital Partners)</td>
+        <td>Swanky UKI</td>
+        <td>2 Feb 2026</td>
+        <td style="color:var(--color-warning);font-weight:700;">25 days</td>
+        <td>In Launch phase but only $559 GMV — not yet truly live. $414K deal value.</td>
+      </tr>
+    </table>
+    <p style="margin-top:10px;"><strong>Also watch:</strong></p>
+    <ul>
+      <li><strong>Heal's POS Pro</strong> (Swanky) — No expected launch date set for the POS component of a $2.18M deal</li>
+      <li><strong>Allbeauty</strong> (FuseFabric) — 🔴 STALLED at 609 days (see "stalled deals" for details)</li>
+    </ul>
+    <p style="margin-top:8px;"><strong>Action:</strong> Check in with Swanky (Dan Partridge / Sean Clanchy) on Kettlewell launch status. Verify the Feb 2 date was realistic and get updated ETA.</p>`;
+}
+
+function handleCapacityQuery() {
+  if (typeof CAPACITY_DATA === 'undefined') return '<p>Capacity data not loaded.</p>';
+  
+  let html = '<p>📊 <strong>Partner Capacity Overview</strong></p>';
+  html += '<table class="chat-table"><tr><th>Partner</th><th>Team Size</th><th>Active</th><th>Completed (2yr)</th><th>Pipeline</th><th>Intensity</th><th>Available?</th></tr>';
+  
+  CAPACITY_DATA.partners.forEach(p => {
+    const icon = p.available ? '✅' : p.color === 'yellow' ? '⚠️' : '🔴';
+    const intColor = p.intensity >= 1.0 ? '' : 'color:var(--shopify-gray-500);';
+    html += `<tr>
+      <td><strong>${p.name}</strong></td>
+      <td>~${p.team_size.toLocaleString()}</td>
+      <td>${p.active_projects}</td>
+      <td>${p.completed_2yr}</td>
+      <td>${p.pipeline_value > 0 ? fmt.currency(p.pipeline_value) : '—'}</td>
+      <td style="${intColor}">${p.intensity.toFixed(2)}/10 (${p.rating})</td>
+      <td>${icon} ${p.available_text}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  
+  html += `<p style="margin-top:10px;"><strong>Key takeaways:</strong></p>
+    <ul>
+      <li>💪 <strong>Swanky UKI</strong> is the most active (8 projects, $8.2M pipeline) but still has capacity at 1.07/10</li>
+      <li>📈 <strong>Vervaunt</strong> has high-profile pipeline (Dune, Clarks, Acne Studios) with lean team</li>
+      <li>🔍 <strong>KPS Digital</strong> has 6 pipeline deals but 0 completed — building practice, track conversion</li>
+      <li>🔴 <strong>AKQA UK</strong> and <strong>Intellias</strong> have zero Shopify work — not active partners</li>
+    </ul>`;
+  
+  return html;
+}
+
+function handlePartnerPipeline(partnerName) {
+  if (typeof PIPELINE_DATA === 'undefined') return '<p>Pipeline data not loaded.</p>';
+  
+  const displayName = partnerName.replace('WPP_EMEA - ', '');
+  
+  // Find active builds
+  const builds = PIPELINE_DATA.active_builds.filter(b => partnerName.includes(b.partner) || b.partner.includes(displayName));
+  
+  // Find sales pipeline
+  const sales = PIPELINE_DATA.sales_pipeline.find(s => partnerName.includes(s.partner) || s.partner.includes(displayName));
+  
+  // Find capacity
+  const cap = typeof CAPACITY_DATA !== 'undefined' ? CAPACITY_DATA.partners.find(c => partnerName.includes(c.name) || c.name.includes(displayName)) : null;
+  
+  let html = `<p>📋 <strong>${displayName} — Pipeline & Capacity</strong></p>`;
+  
+  if (cap) {
+    html += `<table class="chat-table">
+      <tr><td><strong>Team Size</strong></td><td>~${cap.team_size.toLocaleString()} employees</td></tr>
+      <tr><td><strong>Active Projects</strong></td><td>${cap.active_projects}</td></tr>
+      <tr><td><strong>Completed (2yr)</strong></td><td>${cap.completed_2yr}</td></tr>
+      <tr><td><strong>Total Pipeline</strong></td><td>${fmt.currency(cap.pipeline_value)}</td></tr>
+      <tr><td><strong>Workload Intensity</strong></td><td>${cap.intensity.toFixed(2)}/10 (${cap.rating})</td></tr>
+      <tr><td><strong>Availability</strong></td><td>${cap.available ? '✅' : '⚠️'} ${cap.available_text}</td></tr>
+    </table>`;
+  }
+  
+  if (builds.length > 0) {
+    html += `<p style="margin-top:10px;"><strong>🔧 Active Builds (${builds.length}):</strong></p>
+      <table class="chat-table"><tr><th>Deal</th><th>Stage</th><th>Days Since Close</th><th>Status</th></tr>`;
+    builds.forEach(b => {
+      let statusIcon = b.status === 'stalled' ? '🔴' : b.status === 'overdue' || b.status === 'warning' ? '⚠️' : '✅';
+      html += `<tr><td><strong>${b.deal}</strong></td><td>${b.stage}</td><td>${b.days_since_close}d</td><td>${statusIcon} ${b.status_text}</td></tr>`;
+    });
+    html += '</table>';
+  } else {
+    html += '<p style="margin-top:8px;"><em>No active builds.</em></p>';
+  }
+  
+  if (sales && sales.deal_count > 0) {
+    html += `<p style="margin-top:10px;"><strong>📈 Sales Pipeline (${sales.deal_count} deals — ${sales.pipeline_value ? fmt.currency(sales.pipeline_value) : 'TBD'}):</strong></p>`;
+    html += '<table class="chat-table"><tr><th>Deal</th><th>Stage</th><th>Amount</th><th>Close Date</th></tr>';
+    sales.deals.forEach(d => {
+      html += `<tr><td><strong>${d.name}</strong></td><td>${d.stage}</td><td>${d.amount ? fmt.currency(d.amount) : 'TBD'}</td><td>${fmt.date(d.close)}</td></tr>`;
+    });
+    html += '</table>';
+    if (sales.note) {
+      html += `<p style="margin-top:6px;color:var(--color-warning);font-weight:600;">⚠️ ${sales.note}</p>`;
+    }
+  } else if (sales) {
+    html += '<p style="margin-top:8px;"><em>No pipeline deals.</em></p>';
+  }
+  
+  return html;
+}
+
+
 function handleSummary(data) {
   const s = data.overall_summary;
   return `<p>📊 <strong>Portfolio Summary</strong> (Last 2 Years: Feb 2024 – Feb 2026)</p>
@@ -1326,6 +1598,305 @@ function handleSummary(data) {
 }
 
 
+// ============================================
+// ENHANCEMENT 3: PIPELINE / BUILD TRACKER
+// ============================================
+
+function renderPipelineKPIs() {
+  const s = typeof PIPELINE_DATA !== 'undefined' ? PIPELINE_DATA.summary : null;
+  if (!s) return;
+  
+  document.getElementById('pipeline-kpis').innerHTML = `
+    <div class="kpi-card highlight">
+      <div class="kpi-label">Total Pipeline</div>
+      <div class="kpi-value">${fmt.currency(s.total_pipeline_value_usd)}</div>
+      <div class="kpi-detail">Active builds + pre-close opps</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Builds</div>
+      <div class="kpi-value">${s.active_builds}</div>
+      <div class="kpi-detail">Won deals in implementation</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Open Opportunities</div>
+      <div class="kpi-value">${s.open_opportunities}</div>
+      <div class="kpi-detail">${fmt.currency(s.pre_close_pipeline_usd)} pre-close</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Stalled (>180d)</div>
+      <div class="kpi-value" style="color:var(--color-danger);">${s.stalled_over_180d}</div>
+      <div class="kpi-detail">Allbeauty — 609 days</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Overdue Launches</div>
+      <div class="kpi-value" style="color:var(--color-warning);">${s.overdue_launches}</div>
+      <div class="kpi-detail">Kettlewell — 25 days overdue</div>
+    </div>
+  `;
+}
+
+function renderActiveBuildsTable() {
+  if (typeof PIPELINE_DATA === 'undefined') return;
+  const builds = PIPELINE_DATA.active_builds;
+  
+  const tbody = document.getElementById('active-builds-body');
+  if (!tbody) return;
+  
+  tbody.innerHTML = builds.map(b => {
+    const stageClass = b.stage === 'Build' ? 'stage-build' : b.stage === 'Launch' ? 'stage-launch' : 'stage-explore';
+    let statusClass = 'status-on-track';
+    let statusIcon = '✅';
+    if (b.status === 'overdue') { statusClass = 'status-overdue'; statusIcon = '⚠️'; }
+    else if (b.status === 'stalled') { statusClass = 'status-stalled'; statusIcon = '🔴'; }
+    else if (b.status === 'warning') { statusClass = 'status-overdue'; statusIcon = '⚠️'; }
+    
+    return `<tr>
+      <td class="partner-name-cell">${b.partner}</td>
+      <td style="font-weight:600;">${b.deal}</td>
+      <td><span class="stage-badge ${stageClass}">${b.stage}</span></td>
+      <td>${fmt.date(b.close_date)}</td>
+      <td class="text-right">${fmt.currency(b.deal_value)}</td>
+      <td class="text-right" style="${b.days_since_close > 300 ? 'color:var(--color-danger);font-weight:700;' : ''}">${b.days_since_close}d</td>
+      <td>${b.expected_launch ? fmt.date(b.expected_launch) : '<span style="color:var(--shopify-gray-300);">—</span>'}</td>
+      <td><span class="status-indicator ${statusClass}">${statusIcon} ${b.status_text}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSalesPipeline() {
+  if (typeof PIPELINE_DATA === 'undefined') return;
+  const container = document.getElementById('sales-pipeline-cards');
+  if (!container) return;
+  
+  const pipeline = PIPELINE_DATA.sales_pipeline;
+  
+  container.innerHTML = pipeline.map((p, idx) => {
+    const hasPipeline = p.deal_count > 0;
+    const noPipelineClass = hasPipeline ? '' : 'no-pipeline';
+    
+    const stageColors = {
+      'Solution': 'deal-stage-solution',
+      'Demonstrate': 'deal-stage-demonstrate',
+      'Deal Craft': 'deal-stage-dealcraft',
+      'Envision': 'deal-stage-envision',
+      'Pre-Qualified': 'deal-stage-prequalified'
+    };
+    
+    const dealsHTML = (p.deals || []).map(d => `
+      <div class="pipeline-deal-item">
+        <div class="pipeline-deal-name" title="${d.name}">${d.name}</div>
+        <span class="pipeline-deal-stage ${stageColors[d.stage] || ''}">${d.stage}</span>
+        <div class="pipeline-deal-amount">${d.amount ? fmt.currency(d.amount) : 'TBD'}</div>
+      </div>
+    `).join('');
+    
+    const stagesHTML = Object.entries(p.stages || {}).map(([stage, count]) => 
+      `<span class="pipeline-deal-stage ${stageColors[stage] || ''}">${stage}: ${count}</span>`
+    ).join('');
+    
+    const noteHTML = p.note ? `<div class="pipeline-note">${p.note}</div>` : '';
+    
+    return `
+    <div class="pipeline-partner-card ${noPipelineClass}">
+      <div class="pipeline-card-header" onclick="togglePipelineCard(${idx})">
+        <div>
+          <div class="pipeline-card-title">${p.partner}</div>
+          <div class="pipeline-card-meta">${p.deal_count} deal${p.deal_count !== 1 ? 's' : ''} ${p.highlight_deals.length ? '• ' + p.highlight_deals.slice(0, 3).join(', ') : '• No pipeline'}</div>
+        </div>
+        <div class="pipeline-card-value">
+          <div class="value">${p.pipeline_value ? fmt.currency(p.pipeline_value) : '—'}</div>
+          <div class="count">${hasPipeline ? 'pipeline' : ''}</div>
+        </div>
+        ${hasPipeline ? `<span class="pipeline-toggle" id="pipeline-toggle-${idx}">▼</span>` : ''}
+      </div>
+      ${hasPipeline ? `
+      <div class="pipeline-card-body" id="pipeline-body-${idx}">
+        ${dealsHTML}
+        ${stagesHTML ? `<div class="pipeline-stages-summary">${stagesHTML}</div>` : ''}
+        ${noteHTML}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function togglePipelineCard(idx) {
+  const body = document.getElementById('pipeline-body-' + idx);
+  const toggle = document.getElementById('pipeline-toggle-' + idx);
+  if (body) {
+    body.classList.toggle('expanded');
+    if (toggle) toggle.classList.toggle('open');
+  }
+}
+
+
+// ============================================
+// ENHANCEMENT 4: PARTNER CAPACITY
+// ============================================
+
+function renderCapacityAlerts() {
+  if (typeof CAPACITY_DATA === 'undefined') return;
+  const container = document.getElementById('capacity-alerts');
+  if (!container) return;
+  
+  container.innerHTML = CAPACITY_DATA.alerts.map(a => `
+    <div class="capacity-alert alert-${a.type}">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-content">
+        <div class="alert-label">${a.label}</div>
+        <div class="alert-text">${a.text}</div>
+        <div class="alert-detail">${a.detail}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCapacityCards() {
+  if (typeof CAPACITY_DATA === 'undefined') return;
+  const container = document.getElementById('capacity-cards');
+  if (!container) return;
+  
+  container.innerHTML = CAPACITY_DATA.partners.map(p => {
+    // Calculate gauge percentage (based on intensity, max 3 = 100%)
+    const gaugePct = Math.min((p.intensity / 2) * 100, 100);
+    const gaugeColor = p.intensity >= 1.5 ? 'red' : p.intensity >= 0.5 ? (p.color === 'red' ? 'red' : 'green') : (p.color === 'red' ? 'red' : p.color);
+    const activeGauge = p.active_projects > 0 ? Math.max(gaugePct, 15) : (p.pipeline_value > 0 ? 8 : 3);
+    
+    const detailsHTML = p.active_details.length > 0 ? `
+      <div class="capacity-card-details">
+        <strong>Active Projects:</strong>
+        <ul class="detail-list">
+          ${p.active_details.map(d => `<li>${d}</li>`).join('')}
+        </ul>
+      </div>` : '';
+    
+    const recentHTML = p.recently_launched.length > 0 ? `
+      <div class="capacity-card-details" style="border-top:1px solid var(--shopify-gray-100);">
+        <strong>Recently Launched:</strong>
+        <ul class="detail-list">
+          ${p.recently_launched.map(d => `<li>${d}</li>`).join('')}
+        </ul>
+      </div>` : '';
+    
+    return `
+    <div class="capacity-card">
+      <div class="capacity-card-header">
+        <div>
+          <div class="capacity-card-name">${p.name}</div>
+          <div class="capacity-card-team">~${p.team_size.toLocaleString()} employees (${p.team_range})</div>
+        </div>
+        <span class="capacity-available-badge ${p.color}">${p.available ? '✅' : p.color === 'yellow' ? '⚠️' : '🔴'} ${p.available_text}</span>
+      </div>
+      
+      <div class="capacity-gauge-container">
+        <div class="capacity-gauge">
+          <div class="capacity-gauge-fill ${gaugeColor}" style="width: ${activeGauge}%"></div>
+        </div>
+        <div class="capacity-gauge-label">
+          <span>Workload: ${p.rating}</span>
+          <span>${p.intensity.toFixed(2)}/10 per 10 employees</span>
+        </div>
+      </div>
+      
+      <div class="capacity-card-metrics">
+        <div class="capacity-metric">
+          <div class="cm-value ${p.active_projects === 0 ? 'zero' : ''}">${p.active_projects}</div>
+          <div class="cm-label">Active Projects</div>
+        </div>
+        <div class="capacity-metric">
+          <div class="cm-value ${p.completed_2yr === 0 ? 'zero' : ''}">${p.completed_2yr}</div>
+          <div class="cm-label">Completed (2yr)</div>
+        </div>
+        <div class="capacity-metric">
+          <div class="cm-value ${p.pipeline_value === 0 ? 'zero' : ''}">${p.pipeline_value > 0 ? fmt.currency(p.pipeline_value) : '—'}</div>
+          <div class="cm-label">Total Pipeline</div>
+        </div>
+        <div class="capacity-metric">
+          <div class="cm-value ${p.intensity === 0 ? 'zero' : ''}">${p.intensity.toFixed(2)}</div>
+          <div class="cm-label">Intensity /10</div>
+        </div>
+      </div>
+      
+      ${detailsHTML}
+      ${recentHTML}
+    </div>`;
+  }).join('');
+}
+
+function renderCapacityChart() {
+  const ctx = document.getElementById('capacityStackedChart')?.getContext('2d');
+  if (!ctx || typeof CAPACITY_DATA === 'undefined') return;
+  
+  // Filter to partners with any activity
+  const partners = CAPACITY_DATA.partners.filter(p => p.active_projects > 0 || p.pipeline_value > 0);
+  
+  // Get pipeline deal counts from PIPELINE_DATA
+  const pipelineDealCounts = {};
+  if (typeof PIPELINE_DATA !== 'undefined') {
+    PIPELINE_DATA.sales_pipeline.forEach(p => {
+      pipelineDealCounts[p.partner] = p.deal_count;
+    });
+  }
+  
+  const labels = partners.map(p => p.name);
+  const activeData = partners.map(p => p.active_projects);
+  const pipelineData = partners.map(p => pipelineDealCounts[p.name] || 0);
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Active Projects',
+          data: activeData,
+          backgroundColor: '#008060',
+          borderRadius: 4,
+          barThickness: 28
+        },
+        {
+          label: 'Pipeline Deals',
+          data: pipelineData,
+          backgroundColor: '#95bf47',
+          borderRadius: 4,
+          barThickness: 28
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 14, padding: 16, font: { size: 12, weight: '600' } }
+        },
+        tooltip: {
+          callbacks: {
+            afterBody: (ctx) => {
+              const partner = partners[ctx[0].dataIndex];
+              return `Total Pipeline: ${fmt.currency(partner.pipeline_value)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          beginAtZero: true,
+          title: { display: true, text: 'Number of Deals / Projects', font: { size: 11 } },
+          grid: { color: '#f0f0f0' }
+        },
+        y: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { font: { size: 12, weight: '600' } }
+        }
+      }
+    }
+  });
+}
+
+
 // ---- Initialize ----
 function initDashboard(merchantData, sfData) {
   document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-GB', {
@@ -1341,6 +1912,15 @@ function initDashboard(merchantData, sfData) {
   renderSalesRepView(merchantData, sfData.partners);
   renderPartnerCards(merchantData, sfData.partners);
   renderOverviewCharts(merchantData);
+  
+  // NEW: Pipeline & Capacity
+  renderPipelineKPIs();
+  renderActiveBuildsTable();
+  renderSalesPipeline();
+  renderCapacityAlerts();
+  renderCapacityCards();
+  renderCapacityChart();
+  
   initNavigation();
   initAIChat();
 

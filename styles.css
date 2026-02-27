@@ -1572,3 +1572,442 @@ body {
 @media print {
   .ai-chat-container { display: none; }
 }
+
+/* ============================================
+   ENHANCEMENT 3: Pipeline / Build Tracker
+   ============================================ */
+.pipeline-section-card {
+  background: var(--shopify-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--shopify-gray-100);
+  overflow: hidden;
+}
+
+.pipeline-section-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--shopify-gray-100);
+  background: var(--shopify-gray-50);
+}
+
+.pipeline-section-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--shopify-dark);
+  margin-bottom: 2px;
+}
+
+.pipeline-section-header p {
+  font-size: 0.78rem;
+  color: var(--shopify-gray-500);
+}
+
+/* Stage badges in table */
+.stage-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stage-build { background: #fff8e0; color: #92400e; border: 1px solid #fde68a; }
+.stage-launch { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.stage-explore { background: var(--shopify-gray-50); color: var(--shopify-gray-700); border: 1px solid var(--shopify-gray-300); }
+
+/* Status indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.status-on-track { background: #dcfce7; color: #166534; }
+.status-overdue { background: #fff8e0; color: #92400e; }
+.status-stalled { background: #fff0ee; color: #9f1239; }
+.status-warning { background: #fff8e0; color: #92400e; }
+
+/* Pipeline partner cards */
+.pipeline-partner-cards {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.pipeline-partner-card {
+  background: var(--shopify-white);
+  border: 1px solid var(--shopify-gray-100);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.pipeline-partner-card:hover { box-shadow: var(--shadow-md); }
+
+.pipeline-partner-card.no-pipeline {
+  opacity: 0.5;
+}
+
+.pipeline-card-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--shopify-gray-50);
+  border-bottom: 1px solid var(--shopify-gray-100);
+  cursor: pointer;
+}
+
+.pipeline-card-header:hover {
+  background: var(--shopify-green-bg);
+}
+
+.pipeline-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--shopify-dark);
+}
+
+.pipeline-card-meta {
+  font-size: 0.78rem;
+  color: var(--shopify-gray-500);
+  margin-top: 2px;
+}
+
+.pipeline-card-value {
+  text-align: right;
+}
+
+.pipeline-card-value .value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--shopify-green);
+}
+
+.pipeline-card-value .count {
+  font-size: 0.72rem;
+  color: var(--shopify-gray-500);
+}
+
+.pipeline-card-body {
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.pipeline-card-body.expanded {
+  max-height: 1000px;
+  padding: 16px 20px;
+}
+
+.pipeline-deal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--shopify-gray-100);
+  font-size: 0.82rem;
+  gap: 8px;
+}
+
+.pipeline-deal-item:last-child { border-bottom: none; }
+
+.pipeline-deal-name {
+  font-weight: 600;
+  color: var(--shopify-dark);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipeline-deal-stage {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deal-stage-solution { background: #dcfce7; color: #166534; }
+.deal-stage-demonstrate { background: #dbeafe; color: #1e40af; }
+.deal-stage-dealcraft { background: #fff8e0; color: #92400e; }
+.deal-stage-envision { background: #f3e8ff; color: #6b21a8; }
+.deal-stage-prequalified { background: var(--shopify-gray-50); color: var(--shopify-gray-700); }
+
+.pipeline-deal-amount {
+  font-weight: 700;
+  color: var(--shopify-green);
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.pipeline-stages-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--shopify-gray-100);
+}
+
+.pipeline-note {
+  font-size: 0.75rem;
+  color: var(--color-warning);
+  font-weight: 600;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #fff8e0;
+  border-radius: var(--border-radius);
+}
+
+/* Toggle arrow */
+.pipeline-toggle {
+  font-size: 0.85rem;
+  transition: transform 0.3s ease;
+  color: var(--shopify-gray-500);
+}
+
+.pipeline-toggle.open {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   ENHANCEMENT 4: Partner Capacity
+   ============================================ */
+.capacity-alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.capacity-alert {
+  padding: 14px 18px;
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: var(--transition);
+}
+
+.capacity-alert:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.capacity-alert.alert-stalled { background: #fff0ee; border: 1px solid #fecdd3; }
+.capacity-alert.alert-overdue { background: #fff8e0; border: 1px solid #fde68a; }
+.capacity-alert.alert-watch { background: #dbeafe; border: 1px solid #93c5fd; }
+.capacity-alert.alert-rising { background: #dcfce7; border: 1px solid #86efac; }
+.capacity-alert.alert-strongest { background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border: 1px solid #86efac; }
+
+.capacity-alert .alert-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.capacity-alert .alert-content {
+  flex: 1;
+}
+
+.capacity-alert .alert-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.capacity-alert.alert-stalled .alert-label { color: #9f1239; }
+.capacity-alert.alert-overdue .alert-label { color: #92400e; }
+.capacity-alert.alert-watch .alert-label { color: #1e40af; }
+.capacity-alert.alert-rising .alert-label { color: #166534; }
+.capacity-alert.alert-strongest .alert-label { color: #166534; }
+
+.capacity-alert .alert-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--shopify-dark);
+  line-height: 1.4;
+}
+
+.capacity-alert .alert-detail {
+  font-size: 0.75rem;
+  color: var(--shopify-gray-700);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Capacity cards grid */
+.capacity-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.capacity-card {
+  background: var(--shopify-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--shopify-gray-100);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.capacity-card:hover { box-shadow: var(--shadow-md); }
+
+.capacity-card-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--shopify-gray-100);
+}
+
+.capacity-card-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--shopify-dark);
+}
+
+.capacity-card-team {
+  font-size: 0.75rem;
+  color: var(--shopify-gray-500);
+  margin-top: 2px;
+}
+
+.capacity-available-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.capacity-available-badge.green { background: #dcfce7; color: #166534; }
+.capacity-available-badge.yellow { background: #fff8e0; color: #92400e; }
+.capacity-available-badge.red { background: #fff0ee; color: #9f1239; }
+
+/* Capacity gauge */
+.capacity-gauge-container {
+  padding: 12px 20px;
+}
+
+.capacity-gauge {
+  height: 10px;
+  background: var(--shopify-gray-100);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.capacity-gauge-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s ease;
+}
+
+.capacity-gauge-fill.green { background: linear-gradient(90deg, #86efac, #22c55e); }
+.capacity-gauge-fill.yellow { background: linear-gradient(90deg, #fde68a, #f59e0b); }
+.capacity-gauge-fill.red { background: linear-gradient(90deg, #fecdd3, #ef4444); }
+
+.capacity-gauge-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--shopify-gray-500);
+  margin-top: 4px;
+}
+
+.capacity-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--shopify-gray-100);
+}
+
+.capacity-metric {
+  background: var(--shopify-white);
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.capacity-metric .cm-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--shopify-green);
+}
+
+.capacity-metric .cm-value.zero { color: var(--shopify-gray-300); }
+
+.capacity-metric .cm-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--shopify-gray-500);
+  margin-top: 2px;
+}
+
+.capacity-card-details {
+  padding: 12px 20px;
+  font-size: 0.78rem;
+  color: var(--shopify-gray-700);
+}
+
+.capacity-card-details .detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+
+.capacity-card-details .detail-list li {
+  padding: 2px 0;
+  padding-left: 14px;
+  position: relative;
+}
+
+.capacity-card-details .detail-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--shopify-green);
+  font-weight: 700;
+}
+
+/* Capacity badge for partner detail cards */
+.capacity-indicator-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.capacity-indicator-badge.cap-green { background: #dcfce7; color: #166534; }
+.capacity-indicator-badge.cap-yellow { background: #fff8e0; color: #92400e; }
+.capacity-indicator-badge.cap-red { background: #fff0ee; color: #9f1239; }
+
+/* Responsive for pipeline/capacity */
+@media (max-width: 768px) {
+  .pipeline-partner-cards { grid-template-columns: 1fr; padding: 12px; }
+  .capacity-cards-grid { grid-template-columns: 1fr; }
+  .capacity-alerts-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .pipeline-card-body { max-height: none !important; padding: 12px 20px !important; }
+}
