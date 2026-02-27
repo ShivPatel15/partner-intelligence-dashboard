@@ -421,7 +421,7 @@ function renderLaunchByPartnerChart(data) {
   });
 }
 
-// ---- Sales Rep View ----
+// ---- PSM View ----
 function renderSalesRepView(data, sfPartners) {
   const reps = {};
   sfPartners.forEach(sf => {
@@ -514,12 +514,18 @@ function getPartnerTier(partnerName) {
 
 function getEnrichmentForPartner(partnerId) {
   if (typeof ENRICHMENT_DATA === 'undefined') return null;
-  return ENRICHMENT_DATA.partners?.find(p => p.partner_id === partnerId) || null;
+  return ENRICHMENT_DATA.partners?.find(p => p.partner_id == partnerId) || null;
+}
+
+function getWebEnrichment(enrichmentPartner) {
+  if (!enrichmentPartner) return null;
+  // Handle both field names: web_enrichment (original 9) and web_intelligence (batch 1)
+  return enrichmentPartner.web_enrichment || enrichmentPartner.web_intelligence || null;
 }
 
 function buildEnrichmentHTML(enrichmentPartner) {
-  if (!enrichmentPartner || !enrichmentPartner.web_enrichment) return '';
-  const e = enrichmentPartner.web_enrichment;
+  const e = getWebEnrichment(enrichmentPartner);
+  if (!e) return '';
   
   // Status note
   let statusNoteHTML = '';
@@ -533,10 +539,34 @@ function buildEnrichmentHTML(enrichmentPartner) {
     }
   }
 
-  const servicesHTML = (e.key_services || []).slice(0, 8).map(s => `<li>${s}</li>`).join('');
-  const verticalsHTML = (e.industry_verticals || []).slice(0, 8).map(v => `<li>${v}</li>`).join('');
-  const awardsHTML = (e.awards_certifications || []).map(a => `<span class="award-badge">🏆 ${a}</span>`).join('');
-  const casesHTML = (e.case_studies || []).slice(0, 3).map(c => `<li>${c}</li>`).join('');
+  // Normalize field names across web_enrichment (original 9) and web_intelligence (batch 1)
+  const rawServices = e.key_services || [];
+  let servicesList;
+  if (Array.isArray(rawServices)) {
+    servicesList = rawServices;
+  } else {
+    // web_intelligence sometimes has key_services as an object with subcategories
+    servicesList = Object.values(rawServices).flat();
+  }
+  const servicesHTML = servicesList.slice(0, 8).map(s => `<li>${s}</li>`).join('');
+  const verticalsHTML = (e.industry_verticals || e.industry_focus || []).slice(0, 8).map(v => `<li>${v}</li>`).join('');
+  const awards = e.awards_certifications || e.awards_recognition || [];
+  const awardsHTML = awards.map(a => `<span class="award-badge">🏆 ${a}</span>`).join('');
+  // case_studies can be array of strings (original) or array of objects with client/description (batch 1: published_case_studies)
+  const rawCases = e.case_studies || e.published_case_studies || [];
+  const casesHTML = rawCases.slice(0, 5).map(c => {
+    if (typeof c === 'string') return `<li>${c}</li>`;
+    return `<li><strong>${c.client}:</strong> ${c.description}</li>`;
+  }).join('');
+  // Notable clients (batch 1 uses notable_clients, original uses notable_clients_from_web)
+  const notableClients = e.notable_clients_from_web || e.notable_clients || [];
+  const clientsHTML = notableClients.slice(0, 6).map(c => `<li>${c}</li>`).join('');
+  // Differentiators (batch 1 only)
+  const differentiators = e.differentiators || [];
+  const diffHTML = differentiators.slice(0, 5).map(d => `<li>${d}</li>`).join('');
+  // Normalize meta fields
+  const founded = e.founded_year || e.founded || null;
+  const companySize = e.company_size || e.team_size || null;
 
   return `
     <div class="enrichment-section">
@@ -550,8 +580,8 @@ function buildEnrichmentHTML(enrichmentPartner) {
       ${e.usp_value_proposition ? `<div class="enrichment-usp"><strong>Value Proposition:</strong> ${e.usp_value_proposition}</div>` : ''}
 
       <div class="enrichment-meta">
-        ${e.founded_year ? `<span class="enrichment-meta-item">📅 <strong>Founded:</strong> ${e.founded_year}</span>` : ''}
-        ${e.company_size ? `<span class="enrichment-meta-item">👥 <strong>Size:</strong> ${e.company_size}</span>` : ''}
+        ${founded ? `<span class="enrichment-meta-item">📅 <strong>Founded:</strong> ${founded}</span>` : ''}
+        ${companySize ? `<span class="enrichment-meta-item">👥 <strong>Size:</strong> ${companySize}</span>` : ''}
         ${e.headquarters ? `<span class="enrichment-meta-item">📍 <strong>HQ:</strong> ${e.headquarters}</span>` : ''}
         ${enrichmentPartner.website ? `<span class="enrichment-meta-item">🌐 <strong>Web:</strong> ${enrichmentPartner.website}</span>` : ''}
       </div>
@@ -560,10 +590,14 @@ function buildEnrichmentHTML(enrichmentPartner) {
 
       <div class="enrichment-grid">
         ${servicesHTML ? `<div class="enrichment-box"><h5>Key Services</h5><ul>${servicesHTML}</ul></div>` : ''}
-        ${verticalsHTML ? `<div class="enrichment-box"><h5>Industry Verticals</h5><ul>${verticalsHTML}</ul></div>` : ''}
+        ${verticalsHTML ? `<div class="enrichment-box"><h5>Industry Focus</h5><ul>${verticalsHTML}</ul></div>` : ''}
       </div>
 
+      ${clientsHTML ? `<div class="enrichment-box" style="margin-bottom:12px;"><h5>Notable Clients</h5><ul>${clientsHTML}</ul></div>` : ''}
+
       ${casesHTML ? `<div class="enrichment-box" style="margin-bottom:12px;"><h5>Case Studies</h5><ul>${casesHTML}</ul></div>` : ''}
+
+      ${diffHTML ? `<div class="enrichment-box" style="margin-bottom:12px;"><h5>Key Differentiators</h5><ul>${diffHTML}</ul></div>` : ''}
 
       ${e.competitive_positioning ? `<div class="enrichment-positioning"><strong>Strategic Positioning:</strong> ${e.competitive_positioning}</div>` : ''}
     </div>`;
@@ -842,7 +876,7 @@ function renderOverviewCharts(data) {
 
 // ---- CSV Export ----
 function exportTableCSV() {
-  const headers = ['Partner', 'Status', 'Recent Merchants', 'All-Time Merchants', 'L365d GMV', 'Avg Contract Value', 'Avg Days to Launch', 'Geographic Focus', 'Sales Rep'];
+  const headers = ['Partner', 'Status', 'Recent Merchants', 'All-Time Merchants', 'L365d GMV', 'Avg Contract Value', 'Avg Days to Launch', 'Geographic Focus', 'PSM'];
   const rows = tableData.map(p => {
     const totalGMV = p.merchants ? p.merchants.reduce((s, m) => s + (m.gmv_usd_l365d || 0), 0) : 0;
     return [
@@ -1269,11 +1303,11 @@ function handlePartnerProfile(partnerName, data, enrichment) {
   const p = data.partners.find(d => d.partner_name === partnerName);
   if (!p) return `<p>Could not find partner "${partnerName}" in the data.</p>`;
 
-  const en = enrichment?.partners?.find(e => e.partner_id === p.partner_id);
+  const en = enrichment?.partners?.find(e => e.partner_id == p.partner_id) || enrichment?.partners?.find(e => e.partner_name === partnerName);
   const tier = getPartnerTier(partnerName);
   const displayName = partnerName.replace('WPP_EMEA - ', '');
   const totalGMV = p.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0;
-  const we = en?.web_enrichment;
+  const we = getWebEnrichment(en);
 
   let html = `<p>📋 <strong>${displayName}</strong> <span class="tier-badge ${tier.css}" style="font-size:0.7rem;vertical-align:middle;">${tier.label}</span></p>`;
 
@@ -1285,8 +1319,8 @@ function handlePartnerProfile(partnerName, data, enrichment) {
     <tr><td><strong>L365d GMV</strong></td><td>${totalGMV > 0 ? fmt.currency(totalGMV) : '—'}</td></tr>
     <tr><td><strong>Avg Contract Value</strong></td><td>${p.average_contract_value_usd ? fmt.currency(p.average_contract_value_usd) : '—'}</td></tr>
     <tr><td><strong>Avg Time to Launch</strong></td><td>${p.launch_timeline_metrics?.avg_days_to_launch ? Math.round(p.launch_timeline_metrics.avg_days_to_launch) + ' days' : '—'}</td></tr>
-    ${we?.founded_year ? `<tr><td><strong>Founded</strong></td><td>${we.founded_year}</td></tr>` : ''}
-    ${we?.company_size ? `<tr><td><strong>Size</strong></td><td>${we.company_size}</td></tr>` : ''}
+    ${(we?.founded_year || we?.founded) ? `<tr><td><strong>Founded</strong></td><td>${we.founded_year || we.founded}</td></tr>` : ''}
+    ${(we?.company_size || we?.team_size) ? `<tr><td><strong>Size</strong></td><td>${we.company_size || we.team_size}</td></tr>` : ''}
     ${we?.headquarters ? `<tr><td><strong>HQ</strong></td><td>${we.headquarters}</td></tr>` : ''}
   </table>`;
 
@@ -1294,12 +1328,14 @@ function handlePartnerProfile(partnerName, data, enrichment) {
     html += `<p style="margin-top:8px;"><strong>USP:</strong> ${we.usp_value_proposition}</p>`;
   }
 
-  if (we?.key_services?.length) {
-    html += `<p style="margin-top:8px;"><strong>Key Services:</strong> ${we.key_services.slice(0, 6).join(', ')}</p>`;
+  const chatServices = Array.isArray(we?.key_services) ? we.key_services : (we?.key_services ? Object.values(we.key_services).flat() : []);
+  if (chatServices.length) {
+    html += `<p style="margin-top:8px;"><strong>Key Services:</strong> ${chatServices.slice(0, 6).join(', ')}</p>`;
   }
 
-  if (we?.industry_verticals?.length) {
-    html += `<p><strong>Industry Verticals:</strong> ${we.industry_verticals.slice(0, 6).join(', ')}</p>`;
+  const chatVerticals = we?.industry_verticals || we?.industry_focus || [];
+  if (chatVerticals.length) {
+    html += `<p><strong>Industry Focus:</strong> ${chatVerticals.slice(0, 6).join(', ')}</p>`;
   }
 
   if (p.top_3_deals_by_gmv?.length) {
@@ -1340,11 +1376,12 @@ function handleVerticalQuery(q, enrichment) {
 
   const matches = [];
   enrichment.partners.forEach(ep => {
-    const verticals = (ep.web_enrichment?.industry_verticals || []).join(' ').toLowerCase();
+    const weData = getWebEnrichment(ep);
+    const verticals = (weData?.industry_verticals || weData?.industry_focus || []).join(' ').toLowerCase();
     if (verticalKeywords[matchedVertical].some(k => verticals.includes(k))) {
       matches.push({
         name: ep.partner_name.replace('WPP_EMEA - ', ''),
-        verticals: ep.web_enrichment.industry_verticals,
+        verticals: weData?.industry_verticals || weData?.industry_focus || [],
         merchants: ep.recent_merchant_count,
         tier: getPartnerTier(ep.partner_name)
       });
