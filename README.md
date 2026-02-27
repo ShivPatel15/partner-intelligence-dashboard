@@ -1,76 +1,63 @@
 # Shopify Partner Intelligence Dashboard
 
-**Report ID:** 00OG000005a8NZ2AY  
-**Time Period:** Last 2 Years (Feb 2024 – Feb 2026)  
-**Prepared for:** Shiv Patel, Sales Large  
-**Version:** 2.0 — Enhanced with Web Research & AI Chat
+Interactive dashboard for UK Agency Partner intelligence data.
 
-## 🔗 Live Dashboard
-**[View Dashboard on GitHub Pages](https://shivpatel15.github.io/partner-intelligence-dashboard/)**
+**Live Dashboard:** [https://shivpatel15.github.io/partner-intelligence-dashboard/](https://shivpatel15.github.io/partner-intelligence-dashboard/)
 
-## ✨ Features
+## Version History
 
-### v2.0 Enhancements
+### v3.0 — Batch 1 UK Partners (2026-02-27)
+- Added 5 new UK partners from Batch 1:
+  - **Superco** — 15 merchants, $36.6M GMV (PSM: John Roberts)
+  - **Kubix** — 7 merchants, $7.1M GMV (PSM: Yael Weiss)
+  - **Quickfire Digital** — 3 merchants, $3.3M GMV (PSM: Luca Santinelli)
+  - **By Association Only** — 15 merchants, $68.6M GMV (PSM: Luca Santinelli)
+  - **B2 Agency (FKA AYKO)** — 7 merchants, $9.8M GMV (PSM: Yael Weiss)
+- Total partners: **14** (11 active, 3 inactive)
+- Total merchants: **93** across **14 countries**
+- Total L365d GMV: **$289.9M**
+- Updated AI chat engine with new partner names
+- Added new tier badge for Batch 1 partners
 
-#### 🔍 Web Research Enrichment (Enhancement 1)
-Each partner's detail card now includes comprehensive web research intelligence:
-- **Tagline & Value Proposition** — USP from partner websites
-- **Key Services** — Full service offering breakdown
-- **Industry Verticals** — Target markets and specializations
-- **Awards & Certifications** — Partner credentials
-- **Company Metadata** — Founded year, company size, headquarters
-- **Case Studies** — Notable client success stories
-- **Strategic Positioning** — Competitive analysis
-- **Tier Recommendations** — Color-coded strategic tier badges (Tier 1-4)
-- **Status Alerts** — Warning/danger flags for inactive or underperforming partners
+### v2.0 — Full Launch (2026-02-27)
+- 9 UK Agency Partners with full data
+- AI chat engine with embedded partner intelligence
+- Pipeline & capacity analysis
+- Web enrichment USP data
+- Interactive charts, filters, and CSV export
 
-#### 🤖 AI Partner Chat (Enhancement 2)
-An interactive chat interface for querying partner data:
-- **Natural language questions** about partners, deals, timelines, verticals
-- **Keyword-matched responses** with formatted tables, bullet points, and highlights
-- **Suggested question chips** for quick access to common queries
-- **Partner comparisons** — Side-by-side comparison tables
-- **Tier recommendations** — Full strategic tier breakdown
-- **Industry matching** — Find partners by vertical expertise
-- **Chat history** — Scrollable conversation with green/dark bubble styling
+### v1.0 — Initial Deploy
+- Basic partner comparison dashboard
 
-### Core Dashboard Features
-- 📊 **Executive Summary** — KPI cards with key metrics
-- 📋 **Partner Comparison Table** — Sortable, filterable, exportable
-- 🏆 **Top Deals Leaderboard** — Top 10 deals by contract value
-- 🌍 **Geographic Distribution** — Maps and charts for 11 countries
-- ⏱ **Launch Timeline Analysis** — Close-to-launch metrics with color coding
-- 👥 **Sales Rep Coverage** — Partners grouped by PSM
-- 🃏 **Partner Detail Cards** — Expandable cards with full merchant data
+## Data Sources
 
-## 📊 Data Sources
-- **Salesforce Report:** 00OG000005a8NZ2AY
-- **Shopify Data Warehouse:** mart_growth, accounts_and_administration, sales, finance
-- **Web Research:** Partner websites, meta descriptions, sitemap analysis
-- **Enrichment:** USP research, competitive positioning, case studies
+- **Salesforce Report:** 00OG000005a8NZ2AY (EMEA - UK Partners with PSMs)
+- **Shopify Data Warehouse:** partner_impacted_shops, shop_profile_current, sales_opportunities, sales_launch_cases, shop_gmv_daily_summary_v1
+- **Web Research:** Partner website scraping for USP enrichment
+- **Time Period:** Last 2 Years (Feb 2024 – Feb 2026)
 
-## 🏗️ Technology Stack
-- **HTML5** — Semantic, accessible markup (WCAG AA)
-- **CSS3** — Custom properties, flexbox/grid, Shopify design system
-- **Vanilla JavaScript** — Zero dependencies, client-side rendering
-- **Chart.js** — Interactive charts and visualizations
-- **GitHub Pages** — Static hosting
+## Dashboard Sections
 
-## 📁 Files
-| File | Description |
-|------|-------------|
-| `index.html` | Main dashboard with embedded data (MERCHANT_DATA, SF_DATA, ENRICHMENT_DATA) |
-| `styles.css` | Full styling including enrichment cards and AI chat interface |
-| `app.js` | Interactive JS: navigation, charts, sorting, enrichment rendering, AI chat engine |
+1. **📊 Executive Summary** — KPIs, merchant/GMV charts
+2. **📋 Partner Comparison** — Sortable table with filters
+3. **🏆 Top Deals** — Leaderboard by contract value
+4. **🌍 Geographic** — Country distribution analysis
+5. **⏱ Launch Timeline** — Close→launch analysis
+6. **👥 Sales Reps** — PSM coverage view
+7. **🃏 Partner Details** — Expandable cards with enrichment
+8. **🤖 Ask AI** — Natural language partner intelligence chat
 
-## 🔄 Update Instructions
-1. Update data in the workspace (`analysis/merchant_data.json`, `enrichment/partner_usps.json`)
-2. Re-run the Dashboard Publisher agent
-3. Commit updated files to this repository
-4. GitHub Pages will auto-deploy
+## Prepared For
 
-## 📝 Confidentiality
-This dashboard contains **confidential internal Shopify data**. Do not share externally.
+Shiv Patel (shiv.patel@shopify.com) — Sales Large
 
----
-*Generated by Partner Intelligence Dashboard Swarm • v2.0 • 2026-02-27*
+## Tech Stack
+
+- HTML5 / CSS3 / Vanilla JavaScript
+- Chart.js for visualizations
+- All data embedded in HTML (no backend required)
+- GitHub Pages for hosting
+
+## Confidential
+
+Internal Use Only — Shopify Partner Intelligence

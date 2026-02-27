@@ -1,7 +1,8 @@
 /* ============================================
    Shopify Partner Intelligence Dashboard
-   Interactive JavaScript Module — v2.0
+   Interactive JavaScript Module — v3.0
    Enhanced with Web Enrichment + AI Chat
+   + Batch 1 UK Partners (14 total)
    ============================================ */
 
 // ---- Utility Functions ----
@@ -39,7 +40,8 @@ const countryNames = {
   GB: '🇬🇧 United Kingdom', US: '🇺🇸 United States', AU: '🇦🇺 Australia',
   IE: '🇮🇪 Ireland', DE: '🇩🇪 Germany', NZ: '🇳🇿 New Zealand',
   CA: '🇨🇦 Canada', NL: '🇳🇱 Netherlands', ES: '🇪🇸 Spain',
-  PL: '🇵🇱 Poland', SG: '🇸🇬 Singapore'
+  PL: '🇵🇱 Poland', SG: '🇸🇬 Singapore', AE: '🇦🇪 UAE',
+  SE: '🇸🇪 Sweden', ZA: '🇿🇦 South Africa'
 };
 
 // ---- Tab Navigation ----
@@ -64,13 +66,13 @@ function renderKPIs(data) {
   const kpiHTML = `
     <div class="kpi-card highlight">
       <div class="kpi-label">Total Partners</div>
-      <div class="kpi-value">9</div>
-      <div class="kpi-detail">6 active • 3 inactive (last 2 years)</div>
+      <div class="kpi-value">${summary.total_active_partners + (data.report_metadata?.partners_no_activity || 3)}</div>
+      <div class="kpi-detail">${summary.total_active_partners} active • ${data.report_metadata?.partners_no_activity || 3} inactive (last 2 years)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Merchants Launched</div>
       <div class="kpi-value">${summary.total_merchants}</div>
-      <div class="kpi-detail">Across 6 active partners</div>
+      <div class="kpi-detail">Across ${summary.total_active_partners} active partners</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Total L365d GMV</div>
@@ -93,9 +95,9 @@ function renderKPIs(data) {
       <div class="kpi-detail">Won deals in implementation</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Stalled / Overdue</div>
-      <div class="kpi-value" style="color:var(--color-warning);">1 / 1</div>
-      <div class="kpi-detail">Allbeauty stalled • Kettlewell overdue</div>
+      <div class="kpi-label">Primary Market</div>
+      <div class="kpi-value">🇬🇧 UK</div>
+      <div class="kpi-detail">${summary.country_breakdown?.GB || 0} of ${summary.total_merchants} merchants (${summary.total_merchants > 0 ? Math.round((summary.country_breakdown?.GB || 0) / summary.total_merchants * 100) : 0}%)</div>
     </div>
   `;
   document.getElementById('kpi-grid').innerHTML = kpiHTML;
@@ -501,6 +503,11 @@ function getPartnerTier(partnerName) {
     'KPS Digital Ltd': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
     'WPP_EMEA - AKQA UK': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
     'Intellias': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
+    'Superco': { tier: 0, label: 'Batch 1 — New', css: 'tier-new' },
+    'Kubix': { tier: 0, label: 'Batch 1 — New', css: 'tier-new' },
+    'Quickfire Digital': { tier: 0, label: 'Batch 1 — New', css: 'tier-new' },
+    'By Association Only': { tier: 0, label: 'Batch 1 — New', css: 'tier-new' },
+    'B2 Agency (FKA AYKO)': { tier: 0, label: 'Batch 1 — New', css: 'tier-new' },
   };
   return tiers[partnerName] || { tier: 0, label: 'Unclassified', css: 'tier-3' };
 }
@@ -1057,6 +1064,14 @@ function findPartnerInQuery(q, data, enrichment) {
     { key: 'wunderman', name: 'WPP_EMEA - Wunderman Thompson UKI' },
     { key: 'akqa', name: 'WPP_EMEA - AKQA UK' },
     { key: 'intellias', name: 'Intellias' },
+    { key: 'superco', name: 'Superco' },
+    { key: 'kubix', name: 'Kubix' },
+    { key: 'quickfire', name: 'Quickfire Digital' },
+    { key: 'by association', name: 'By Association Only' },
+    { key: 'association only', name: 'By Association Only' },
+    { key: 'b2 agency', name: 'B2 Agency (FKA AYKO)' },
+    { key: 'ayko', name: 'B2 Agency (FKA AYKO)' },
+    { key: 'b2agency', name: 'B2 Agency (FKA AYKO)' },
   ];
   
   // Match "tell me about", "about", or just partner name
@@ -1114,6 +1129,12 @@ function handleComparison(q, data, enrichment) {
     { key: 'vmly', name: 'WPP_EMEA - VMLY&R UKI' },
     { key: 'akqa', name: 'WPP_EMEA - AKQA UK' },
     { key: 'intellias', name: 'Intellias' },
+    { key: 'superco', name: 'Superco' },
+    { key: 'kubix', name: 'Kubix' },
+    { key: 'quickfire', name: 'Quickfire Digital' },
+    { key: 'association', name: 'By Association Only' },
+    { key: 'b2 agency', name: 'B2 Agency (FKA AYKO)' },
+    { key: 'ayko', name: 'B2 Agency (FKA AYKO)' },
   ];
 
   const matched = names.filter(n => q.includes(n.key));
