@@ -1,84 +1,76 @@
 # Shopify Partner Intelligence Dashboard
 
-> **UK Agency Partners — Enterprise Tier**
-> Report ID: `00OG000005a8NZ2AY` | Time Period: Feb 2024 – Feb 2026
+**Report ID:** 00OG000005a8NZ2AY  
+**Time Period:** Last 2 Years (Feb 2024 – Feb 2026)  
+**Prepared for:** Shiv Patel, Sales Large  
+**Version:** 2.0 — Enhanced with Web Research & AI Chat
 
-## Overview
+## 🔗 Live Dashboard
+**[View Dashboard on GitHub Pages](https://shivpatel15.github.io/partner-intelligence-dashboard/)**
 
-Interactive HTML dashboard providing comprehensive intelligence on 9 UK Agency Partners managed by the Sales Large team. Built for Shiv Patel and the Shopify partner team.
+## ✨ Features
 
-### Key Metrics
-- **9 partners** analyzed (6 active, 3 inactive)
-- **46 merchants** launched in last 2 years
-- **$164.6M** total L365d GMV
-- **171 days** average time to launch
-- **85%** Plus shop adoption rate
+### v2.0 Enhancements
 
-## Dashboard Sections
+#### 🔍 Web Research Enrichment (Enhancement 1)
+Each partner's detail card now includes comprehensive web research intelligence:
+- **Tagline & Value Proposition** — USP from partner websites
+- **Key Services** — Full service offering breakdown
+- **Industry Verticals** — Target markets and specializations
+- **Awards & Certifications** — Partner credentials
+- **Company Metadata** — Founded year, company size, headquarters
+- **Case Studies** — Notable client success stories
+- **Strategic Positioning** — Competitive analysis
+- **Tier Recommendations** — Color-coded strategic tier badges (Tier 1-4)
+- **Status Alerts** — Warning/danger flags for inactive or underperforming partners
 
-| Section | Description |
-|---------|-------------|
-| 📊 Executive Summary | KPIs, merchant count charts, GMV by partner |
-| 📋 Partner Comparison | Sortable, filterable table with all 9 partners |
-| 🏆 Top Deals | Leaderboard of largest deals by contract value |
-| 🌍 Geographic | Merchant distribution across 11 countries |
-| ⏱ Launch Timeline | Close-to-launch analysis with individual merchant bars |
-| 👥 Sales Reps | Partners grouped by PSM (Roberts, Weiss, Santinelli) |
-| 🃏 Partner Details | Expandable cards with contacts, merchants, deal history |
+#### 🤖 AI Partner Chat (Enhancement 2)
+An interactive chat interface for querying partner data:
+- **Natural language questions** about partners, deals, timelines, verticals
+- **Keyword-matched responses** with formatted tables, bullet points, and highlights
+- **Suggested question chips** for quick access to common queries
+- **Partner comparisons** — Side-by-side comparison tables
+- **Tier recommendations** — Full strategic tier breakdown
+- **Industry matching** — Find partners by vertical expertise
+- **Chat history** — Scrollable conversation with green/dark bubble styling
 
-## Features
-- **Sortable tables** — Click any column header to sort
-- **Filters** — Search by name, filter by rep or status
-- **CSV Export** — Download partner data as CSV
-- **Responsive** — Works on desktop, tablet, and mobile
-- **Print-friendly** — Clean output for PDF/print
-- **Chart.js visualizations** — Bar charts, doughnut charts, timeline bars
-- **Expandable partner cards** — Full contact info and merchant lists
+### Core Dashboard Features
+- 📊 **Executive Summary** — KPI cards with key metrics
+- 📋 **Partner Comparison Table** — Sortable, filterable, exportable
+- 🏆 **Top Deals Leaderboard** — Top 10 deals by contract value
+- 🌍 **Geographic Distribution** — Maps and charts for 11 countries
+- ⏱ **Launch Timeline Analysis** — Close-to-launch metrics with color coding
+- 👥 **Sales Rep Coverage** — Partners grouped by PSM
+- 🃏 **Partner Detail Cards** — Expandable cards with full merchant data
 
-## Files
-```
-dashboard/
-├── index.html    # Main dashboard (self-contained with embedded data)
-├── styles.css    # All styling (Shopify brand colors)
-├── app.js        # Interactive JavaScript (vanilla, no framework)
-├── data.json     # Consolidated partner data (JSON)
-└── README.md     # This file
-```
+## 📊 Data Sources
+- **Salesforce Report:** 00OG000005a8NZ2AY
+- **Shopify Data Warehouse:** mart_growth, accounts_and_administration, sales, finance
+- **Web Research:** Partner websites, meta descriptions, sitemap analysis
+- **Enrichment:** USP research, competitive positioning, case studies
 
-## Deployment
+## 🏗️ Technology Stack
+- **HTML5** — Semantic, accessible markup (WCAG AA)
+- **CSS3** — Custom properties, flexbox/grid, Shopify design system
+- **Vanilla JavaScript** — Zero dependencies, client-side rendering
+- **Chart.js** — Interactive charts and visualizations
+- **GitHub Pages** — Static hosting
 
-### GitHub Pages
-1. Push this folder to a GitHub repository
-2. Go to Settings → Pages
-3. Set source to **main** branch, root folder
-4. Dashboard will be live at `https://<username>.github.io/<repo-name>/`
+## 📁 Files
+| File | Description |
+|------|-------------|
+| `index.html` | Main dashboard with embedded data (MERCHANT_DATA, SF_DATA, ENRICHMENT_DATA) |
+| `styles.css` | Full styling including enrichment cards and AI chat interface |
+| `app.js` | Interactive JS: navigation, charts, sorting, enrichment rendering, AI chat engine |
 
-### Quick Site / Static Hosting
-1. Clone the repository
-2. Point your static host to the `dashboard/` directory
-3. No build step required — pure HTML/CSS/JS
+## 🔄 Update Instructions
+1. Update data in the workspace (`analysis/merchant_data.json`, `enrichment/partner_usps.json`)
+2. Re-run the Dashboard Publisher agent
+3. Commit updated files to this repository
+4. GitHub Pages will auto-deploy
 
-### Local Preview
-```bash
-cd dashboard
-python3 -m http.server 8000
-# Open http://localhost:8000
-```
-
-## Data Sources
-- **Salesforce Report** `00OG000005a8NZ2AY` — Partner records
-- **Shopify Data Warehouse** — Merchant GMV, launch cases, opportunities
-- **Analysis date:** February 27, 2026
-
-## Updating Data
-1. Re-run data extraction from Salesforce + DW
-2. Update `MERCHANT_DATA` and `SF_DATA` objects in `index.html`
-3. Commit and push — GitHub Pages auto-deploys
-
-## Technology
-- HTML5 + CSS3 + Vanilla JavaScript
-- Chart.js 4.4.1 (CDN)
-- No build tools, no frameworks, no dependencies
+## 📝 Confidentiality
+This dashboard contains **confidential internal Shopify data**. Do not share externally.
 
 ---
-*Generated by Partner Intelligence Dashboard Swarm • Confidential — Internal Use Only*
+*Generated by Partner Intelligence Dashboard Swarm • v2.0 • 2026-02-27*

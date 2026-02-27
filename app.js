@@ -1,6 +1,7 @@
 /* ============================================
    Shopify Partner Intelligence Dashboard
-   Interactive JavaScript Module
+   Interactive JavaScript Module — v2.0
+   Enhanced with Web Enrichment + AI Chat
    ============================================ */
 
 // ---- Utility Functions ----
@@ -104,8 +105,6 @@ function renderPartnerTable(partners, sfPartners) {
     const sf = sfPartners.find(s => s.shopify_partner_id === String(p.partner_id)) || {};
     return { ...p, sf };
   });
-
-  const container = document.getElementById('partner-table-body');
   updateTableSort();
 }
 
@@ -150,7 +149,6 @@ function updateTableSort() {
     </tr>`;
   }).join('');
 
-  // Update sort indicators
   document.querySelectorAll('#partner-table th').forEach(th => {
     th.classList.remove('sort-asc', 'sort-desc');
     if (th.dataset.field === currentSort.field) {
@@ -200,7 +198,6 @@ function renderTopDeals(data) {
     }
   });
 
-  // Sort by deal amount, fallback to GMV
   const byDeal = [...allMerchants]
     .filter(m => (m.deal_amount_usd || 0) > 0 || (m.gmv_usd_l365d || 0) > 0)
     .sort((a, b) => (b.deal_amount_usd || 0) - (a.deal_amount_usd || 0))
@@ -245,7 +242,6 @@ function renderGeoDistribution(data) {
       </div>`;
   }).join('');
 
-  // Render a doughnut chart for regions
   renderGeoChart(sorted, total);
 }
 
@@ -290,7 +286,6 @@ function renderGeoChart(sorted, total) {
 
 // ---- Launch Timeline ----
 function renderLaunchTimeline(data) {
-  // Collect all merchants with launch data
   const launchData = [];
   data.partners.forEach(p => {
     if (p.merchants) {
@@ -312,12 +307,12 @@ function renderLaunchTimeline(data) {
   launchData.sort((a, b) => a.days - b.days);
   const maxDays = Math.max(...launchData.map(d => d.days), 1);
 
-  // Summary stats
   const allDays = launchData.map(d => d.days);
   const fastest = allDays.length ? Math.min(...allDays) : null;
   const slowest = allDays.length ? Math.max(...allDays) : null;
   const avg = allDays.length ? (allDays.reduce((s, d) => s + d, 0) / allDays.length) : null;
-  const median = allDays.length ? allDays.sort((a, b) => a - b)[Math.floor(allDays.length / 2)] : null;
+  const sortedDays = [...allDays].sort((a, b) => a - b);
+  const median = allDays.length ? sortedDays[Math.floor(allDays.length / 2)] : null;
 
   document.getElementById('timeline-stats').innerHTML = `
     <div class="timeline-stat-card">
@@ -344,7 +339,6 @@ function renderLaunchTimeline(data) {
     </div>
   `;
 
-  // Individual merchant bars
   document.getElementById('launch-bars').innerHTML = launchData.map(d => {
     const pct = (d.days / maxDays * 100).toFixed(0);
     const colorClass = d.days <= 90 ? 'fast' : d.days <= 180 ? 'medium' : 'slow';
@@ -359,7 +353,6 @@ function renderLaunchTimeline(data) {
       </div>`;
   }).join('');
 
-  // Chart: Average time to launch by partner
   renderLaunchByPartnerChart(data);
 }
 
@@ -487,7 +480,85 @@ function renderSalesRepView(data, sfPartners) {
   `).join('');
 }
 
-// ---- Partner Detail Cards ----
+
+// ============================================
+// ENHANCEMENT 1: ENRICHMENT DATA IN CARDS
+// ============================================
+
+function getPartnerTier(partnerName) {
+  const tiers = {
+    'FuseFabric': { tier: 1, label: 'Tier 1 — Invest Heavily', css: 'tier-1' },
+    'Swanky UKI': { tier: 1, label: 'Tier 1 — Invest Heavily', css: 'tier-1' },
+    'Vervaunt': { tier: 2, label: 'Tier 2 — Grow Strategically', css: 'tier-2' },
+    'WPP_EMEA - Wunderman Thompson UKI': { tier: 2, label: 'Tier 2 — Grow Strategically', css: 'tier-2' },
+    'CTI Digital': { tier: 3, label: 'Tier 3 — Monitor & Develop', css: 'tier-3' },
+    'WPP_EMEA - VMLY&R UKI': { tier: 3, label: 'Tier 3 — Monitor & Develop', css: 'tier-3' },
+    'KPS Digital Ltd': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
+    'WPP_EMEA - AKQA UK': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
+    'Intellias': { tier: 4, label: 'Tier 4 — Reassess', css: 'tier-4' },
+  };
+  return tiers[partnerName] || { tier: 0, label: 'Unclassified', css: 'tier-3' };
+}
+
+function getEnrichmentForPartner(partnerId) {
+  if (typeof ENRICHMENT_DATA === 'undefined') return null;
+  return ENRICHMENT_DATA.partners?.find(p => p.partner_id === partnerId) || null;
+}
+
+function buildEnrichmentHTML(enrichmentPartner) {
+  if (!enrichmentPartner || !enrichmentPartner.web_enrichment) return '';
+  const e = enrichmentPartner.web_enrichment;
+  
+  // Status note
+  let statusNoteHTML = '';
+  if (enrichmentPartner.recent_merchant_count === 0 && enrichmentPartner.partner_name !== 'KPS Digital Ltd') {
+    statusNoteHTML = `<div class="enrichment-status-note danger">🔴 No recent Shopify merchant activity — ${e.competitive_positioning?.split('.').slice(-1)[0]?.trim() || 'not a Shopify-focused partner'}</div>`;
+  } else if (enrichmentPartner.recent_merchant_count <= 1 && enrichmentPartner.partner_name !== 'FuseFabric') {
+    if (enrichmentPartner.partner_name === 'KPS Digital Ltd') {
+      statusNoteHTML = `<div class="enrichment-status-note warning">⚠️ 0 recent Shopify merchants — SAP-focused enterprise consultancy</div>`;
+    } else if (enrichmentPartner.partner_name === 'WPP_EMEA - VMLY&R UKI') {
+      statusNoteHTML = `<div class="enrichment-status-note warning">⚠️ Only 1 recent merchant — underperforming relative to scale (30,000+ employees)</div>`;
+    }
+  }
+
+  const servicesHTML = (e.key_services || []).slice(0, 8).map(s => `<li>${s}</li>`).join('');
+  const verticalsHTML = (e.industry_verticals || []).slice(0, 8).map(v => `<li>${v}</li>`).join('');
+  const awardsHTML = (e.awards_certifications || []).map(a => `<span class="award-badge">🏆 ${a}</span>`).join('');
+  const casesHTML = (e.case_studies || []).slice(0, 3).map(c => `<li>${c}</li>`).join('');
+
+  return `
+    <div class="enrichment-section">
+      <div class="enrichment-header">
+        <span style="font-size:1.2rem;">🔍</span>
+        <h4>Web Research Intelligence</h4>
+      </div>
+
+      ${e.tagline ? `<div class="enrichment-tagline">"${e.tagline}"</div>` : ''}
+      ${statusNoteHTML}
+      ${e.usp_value_proposition ? `<div class="enrichment-usp"><strong>Value Proposition:</strong> ${e.usp_value_proposition}</div>` : ''}
+
+      <div class="enrichment-meta">
+        ${e.founded_year ? `<span class="enrichment-meta-item">📅 <strong>Founded:</strong> ${e.founded_year}</span>` : ''}
+        ${e.company_size ? `<span class="enrichment-meta-item">👥 <strong>Size:</strong> ${e.company_size}</span>` : ''}
+        ${e.headquarters ? `<span class="enrichment-meta-item">📍 <strong>HQ:</strong> ${e.headquarters}</span>` : ''}
+        ${enrichmentPartner.website ? `<span class="enrichment-meta-item">🌐 <strong>Web:</strong> ${enrichmentPartner.website}</span>` : ''}
+      </div>
+
+      ${awardsHTML ? `<div class="enrichment-awards">${awardsHTML}</div>` : ''}
+
+      <div class="enrichment-grid">
+        ${servicesHTML ? `<div class="enrichment-box"><h5>Key Services</h5><ul>${servicesHTML}</ul></div>` : ''}
+        ${verticalsHTML ? `<div class="enrichment-box"><h5>Industry Verticals</h5><ul>${verticalsHTML}</ul></div>` : ''}
+      </div>
+
+      ${casesHTML ? `<div class="enrichment-box" style="margin-bottom:12px;"><h5>Case Studies</h5><ul>${casesHTML}</ul></div>` : ''}
+
+      ${e.competitive_positioning ? `<div class="enrichment-positioning"><strong>Strategic Positioning:</strong> ${e.competitive_positioning}</div>` : ''}
+    </div>`;
+}
+
+
+// ---- Partner Detail Cards (Enhanced with Enrichment) ----
 function renderPartnerCards(data, sfPartners) {
   const container = document.getElementById('partner-cards');
 
@@ -498,6 +569,8 @@ function renderPartnerCards(data, sfPartners) {
     const geo = p.geographic_focus ? Object.keys(p.geographic_focus).join(', ') : '—';
     const avgLaunch = p.launch_timeline_metrics?.avg_days_to_launch;
     const displayName = p.partner_name.replace('WPP_EMEA - ', '');
+    const tier = getPartnerTier(p.partner_name);
+    const enrichment = getEnrichmentForPartner(p.partner_id);
 
     // Top deals
     const dealsHTML = (p.top_3_deals_by_gmv || []).map(d => `
@@ -542,6 +615,9 @@ function renderPartnerCards(data, sfPartners) {
         </tr>
       `).join('');
 
+    // Enrichment section
+    const enrichmentHTML = buildEnrichmentHTML(enrichment);
+
     return `
     <div class="partner-card" data-partner="${p.partner_id}">
       <div class="partner-card-header">
@@ -551,7 +627,7 @@ function renderPartnerCards(data, sfPartners) {
         </div>
         <div class="partner-card-badges">
           <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}">${isActive ? 'Active' : 'Inactive'}</span>
-          <span class="badge badge-blue">Enterprise</span>
+          <span class="tier-badge ${tier.css}">${tier.label}</span>
         </div>
       </div>
 
@@ -593,6 +669,8 @@ function renderPartnerCards(data, sfPartners) {
       <div class="partner-expanded" id="expanded-${p.partner_id}">
         ${sf.partner_since ? `<div style="font-size:0.78rem;color:var(--shopify-gray-500);margin-top:8px;">Partner since ${fmt.date(sf.partner_since)} • Geo: ${geo}</div>` : ''}
 
+        ${enrichmentHTML}
+
         ${contactsHTML ? `<h4>Contacts</h4><div class="contact-grid">${contactsHTML}</div>` : ''}
 
         ${merchantsHTML ? `
@@ -630,7 +708,6 @@ function toggleExpand(partnerId) {
 
 // ---- Overview Charts ----
 function renderOverviewCharts(data) {
-  // Merchant count by partner (bar chart)
   const activePartners = data.partners
     .filter(p => p.recent_merchant_count > 0)
     .sort((a, b) => b.recent_merchant_count - a.recent_merchant_count);
@@ -660,7 +737,6 @@ function renderOverviewCharts(data) {
     });
   }
 
-  // GMV by partner (horizontal bar)
   const gmvPartners = activePartners
     .map(p => ({
       name: p.partner_name.replace('WPP_EMEA - ', ''),
@@ -735,14 +811,527 @@ function exportTableCSV() {
   URL.revokeObjectURL(url);
 }
 
+
+// ============================================
+// ENHANCEMENT 2: AI CHAT ENGINE
+// ============================================
+
+function askSuggestion(el) {
+  const q = el.textContent.trim();
+  document.getElementById('ai-chat-input').value = q;
+  sendAIMessage();
+}
+
+function sendAIMessage() {
+  const input = document.getElementById('ai-chat-input');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+
+  // Add user bubble
+  addChatMessage('user', q);
+
+  // Show typing indicator
+  const typingId = showTyping();
+
+  // Process after small delay for UX
+  setTimeout(() => {
+    removeTyping(typingId);
+    const response = processAIQuery(q);
+    addChatMessage('system', response);
+  }, 400 + Math.random() * 400);
+}
+
+function addChatMessage(role, html) {
+  const container = document.getElementById('ai-chat-messages');
+  const avatar = role === 'user' ? '👤' : '🤖';
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-msg ${role}`;
+  msgDiv.innerHTML = `
+    <div class="chat-avatar">${avatar}</div>
+    <div class="chat-bubble">${role === 'user' ? `<p>${escapeHtml(html)}</p>` : html}</div>
+  `;
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('ai-chat-messages');
+  const id = 'typing-' + Date.now();
+  const div = document.createElement('div');
+  div.id = id;
+  div.className = 'chat-msg system';
+  div.innerHTML = `<div class="chat-avatar">🤖</div><div class="chat-bubble"><div class="chat-typing"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(text));
+  return div.innerHTML;
+}
+
+// ---- AI Query Processing Engine ----
+function processAIQuery(query) {
+  const q = query.toLowerCase().trim();
+  const data = typeof MERCHANT_DATA !== 'undefined' ? MERCHANT_DATA : null;
+  const enrichment = typeof ENRICHMENT_DATA !== 'undefined' ? ENRICHMENT_DATA : null;
+
+  if (!data) return '<p>Data not loaded. Please refresh the page.</p>';
+
+  // 1. Fastest launch
+  if (q.includes('fastest') && (q.includes('launch') || q.includes('time'))) {
+    return handleFastestLaunch(data);
+  }
+
+  // 2. Compare X vs Y
+  if (q.includes('compare') || q.includes(' vs ') || q.includes('versus')) {
+    return handleComparison(q, data, enrichment);
+  }
+
+  // 3. Tier / Recommendations
+  if (q.includes('recommend') || q.includes('tier') || q.includes('invest') || q.includes('should we')) {
+    return handleTierRecommendations(enrichment);
+  }
+
+  // 4. Inactive partners
+  if (q.includes('inactive') || q.includes('no activity') || q.includes('zero merchant') || q.includes('not active')) {
+    return handleInactivePartners(data, enrichment);
+  }
+
+  // 5. Top deals / biggest deals
+  if (q.includes('top deal') || q.includes('biggest deal') || q.includes('largest deal') || q.includes('deal value') || q.includes('contract value')) {
+    return handleTopDeals(data);
+  }
+
+  // 6. Enterprise / best for enterprise
+  if (q.includes('enterprise') && (q.includes('best') || q.includes('partner') || q.includes('retailer'))) {
+    return handleEnterprisePartner(data, enrichment);
+  }
+
+  // 7. Tell me about [partner] / partner name queries
+  const partnerMatch = findPartnerInQuery(q, data, enrichment);
+  if (partnerMatch) {
+    return handlePartnerProfile(partnerMatch.name, data, enrichment);
+  }
+
+  // 8. Fashion / vertical queries
+  if (q.includes('fashion') || q.includes('beauty') || q.includes('food') || q.includes('health') || q.includes('luxury') || q.includes('retail') || q.includes('automotive') || q.includes('nutrition')) {
+    return handleVerticalQuery(q, enrichment);
+  }
+
+  // 9. GMV query
+  if (q.includes('gmv') || q.includes('revenue') || q.includes('gross merchandise')) {
+    return handleGMVQuery(data);
+  }
+
+  // 10. Geographic query
+  if (q.includes('geograph') || q.includes('country') || q.includes('location') || q.includes('uk ') || q.includes('international')) {
+    return handleGeoQuery(data);
+  }
+
+  // 11. WPP query
+  if (q.includes('wpp') || q.includes('vml') || q.includes('wunderman') || q.includes('akqa')) {
+    return handleWPPQuery(data, enrichment);
+  }
+
+  // 12. Summary / overview
+  if (q.includes('summary') || q.includes('overview') || q.includes('overall') || q.includes('how many')) {
+    return handleSummary(data);
+  }
+
+  // Fallback
+  return `<p>I wasn't able to find a specific answer for that question. Here are some things I can help with:</p>
+    <ul>
+      <li><strong>Partner profiles</strong> — "Tell me about FuseFabric" or "Tell me about Swanky"</li>
+      <li><strong>Comparisons</strong> — "Compare FuseFabric vs Swanky UKI"</li>
+      <li><strong>Launch speed</strong> — "Which partner has the fastest time to launch?"</li>
+      <li><strong>Top deals</strong> — "Show biggest deals by contract value"</li>
+      <li><strong>Inactive partners</strong> — "Show me inactive partners"</li>
+      <li><strong>Tier recommendations</strong> — "What are the tier recommendations?"</li>
+      <li><strong>Industry matches</strong> — "Which partners work with fashion brands?"</li>
+    </ul>
+    <p>For deeper analysis, contact <strong>Shiv Patel</strong> (shiv.patel@shopify.com) or your Partner Intelligence Coordinator.</p>`;
+}
+
+function findPartnerInQuery(q, data, enrichment) {
+  const names = [
+    { key: 'fusefabric', name: 'FuseFabric' },
+    { key: 'swanky', name: 'Swanky UKI' },
+    { key: 'vervaunt', name: 'Vervaunt' },
+    { key: 'cti digital', name: 'CTI Digital' },
+    { key: 'cti', name: 'CTI Digital' },
+    { key: 'kps', name: 'KPS Digital Ltd' },
+    { key: 'vmly', name: 'WPP_EMEA - VMLY&R UKI' },
+    { key: 'vml', name: 'WPP_EMEA - VMLY&R UKI' },
+    { key: 'wunderman', name: 'WPP_EMEA - Wunderman Thompson UKI' },
+    { key: 'akqa', name: 'WPP_EMEA - AKQA UK' },
+    { key: 'intellias', name: 'Intellias' },
+  ];
+  
+  // Match "tell me about", "about", or just partner name
+  for (const n of names) {
+    if (q.includes(n.key)) return n;
+  }
+  return null;
+}
+
+function handleFastestLaunch(data) {
+  const partners = data.partners
+    .filter(p => p.launch_timeline_metrics?.avg_days_to_launch != null)
+    .sort((a, b) => a.launch_timeline_metrics.avg_days_to_launch - b.launch_timeline_metrics.avg_days_to_launch);
+
+  let table = `<table class="chat-table">
+    <tr><th>Partner</th><th>Avg Days</th><th>Median</th><th>Merchants w/ Data</th></tr>`;
+  partners.forEach(p => {
+    const lt = p.launch_timeline_metrics;
+    table += `<tr>
+      <td><strong>${p.partner_name.replace('WPP_EMEA - ','')}</strong></td>
+      <td>${Math.round(lt.avg_days_to_launch)} days</td>
+      <td>${lt.median_days_to_launch ? Math.round(lt.median_days_to_launch) + ' days' : '—'}</td>
+      <td>${lt.merchants_with_launch_date}</td>
+    </tr>`;
+  });
+  table += '</table>';
+
+  // Individual fastest merchant
+  const allLaunches = [];
+  data.partners.forEach(p => {
+    (p.merchants || []).forEach(m => {
+      if (m.days_to_launch != null) {
+        allLaunches.push({ name: m.shop_name, days: m.days_to_launch, partner: p.partner_name.replace('WPP_EMEA - ','') });
+      }
+    });
+  });
+  allLaunches.sort((a,b) => a.days - b.days);
+
+  return `<p>🏆 <strong>FuseFabric</strong> has the fastest average time to launch at <span class="chat-highlight">121 days</span>, despite handling the largest enterprise deals!</p>
+    ${table}
+    <p style="margin-top:10px;"><strong>Top 5 fastest individual merchants:</strong></p>
+    <ol>${allLaunches.slice(0,5).map(m => `<li><strong>${m.name}</strong> — ${m.days} days (${m.partner})</li>`).join('')}</ol>
+    <p style="margin-top:8px;font-size:0.82rem;color:#6d7175;">Note: FuseFabric launched Escentual ($46.9M deal) in just 33 days — a remarkable achievement for enterprise scale.</p>`;
+}
+
+function handleComparison(q, data, enrichment) {
+  // Extract two partner names
+  const names = [
+    { key: 'fusefabric', name: 'FuseFabric' },
+    { key: 'swanky', name: 'Swanky UKI' },
+    { key: 'vervaunt', name: 'Vervaunt' },
+    { key: 'cti', name: 'CTI Digital' },
+    { key: 'kps', name: 'KPS Digital Ltd' },
+    { key: 'wunderman', name: 'WPP_EMEA - Wunderman Thompson UKI' },
+    { key: 'vmly', name: 'WPP_EMEA - VMLY&R UKI' },
+    { key: 'akqa', name: 'WPP_EMEA - AKQA UK' },
+    { key: 'intellias', name: 'Intellias' },
+  ];
+
+  const matched = names.filter(n => q.includes(n.key));
+  if (matched.length < 2) {
+    return '<p>Please specify two partners to compare, e.g., "Compare FuseFabric vs Swanky UKI"</p>';
+  }
+
+  const [p1Data, p2Data] = matched.slice(0, 2).map(m => data.partners.find(p => p.partner_name === m.name));
+  if (!p1Data || !p2Data) return '<p>Could not find both partners in the dataset.</p>';
+
+  const p1Name = p1Data.partner_name.replace('WPP_EMEA - ', '');
+  const p2Name = p2Data.partner_name.replace('WPP_EMEA - ', '');
+  const p1GMV = p1Data.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0;
+  const p2GMV = p2Data.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0;
+  const p1Tier = getPartnerTier(p1Data.partner_name);
+  const p2Tier = getPartnerTier(p2Data.partner_name);
+
+  return `<p>📊 <strong>Head-to-Head Comparison</strong></p>
+    <table class="chat-table">
+      <tr><th>Metric</th><th>${p1Name}</th><th>${p2Name}</th></tr>
+      <tr><td>Strategic Tier</td><td><span class="chat-tier-${p1Tier.tier}">${p1Tier.label}</span></td><td><span class="chat-tier-${p2Tier.tier}">${p2Tier.label}</span></td></tr>
+      <tr><td>Recent Merchants</td><td>${p1Data.recent_merchant_count}</td><td>${p2Data.recent_merchant_count}</td></tr>
+      <tr><td>All-Time Merchants</td><td>${p1Data.all_time_merchants}</td><td>${p2Data.all_time_merchants}</td></tr>
+      <tr><td>L365d GMV</td><td>${fmt.currency(p1GMV)}</td><td>${fmt.currency(p2GMV)}</td></tr>
+      <tr><td>Avg Contract Value</td><td>${p1Data.average_contract_value_usd ? fmt.currency(p1Data.average_contract_value_usd) : '—'}</td><td>${p2Data.average_contract_value_usd ? fmt.currency(p2Data.average_contract_value_usd) : '—'}</td></tr>
+      <tr><td>Avg Time to Launch</td><td>${p1Data.launch_timeline_metrics?.avg_days_to_launch ? Math.round(p1Data.launch_timeline_metrics.avg_days_to_launch) + 'd' : '—'}</td><td>${p2Data.launch_timeline_metrics?.avg_days_to_launch ? Math.round(p2Data.launch_timeline_metrics.avg_days_to_launch) + 'd' : '—'}</td></tr>
+      <tr><td>Geographic Reach</td><td>${p1Data.geographic_focus ? Object.keys(p1Data.geographic_focus).length + ' countries' : '—'}</td><td>${p2Data.geographic_focus ? Object.keys(p2Data.geographic_focus).length + ' countries' : '—'}</td></tr>
+    </table>`;
+}
+
+function handleTierRecommendations(enrichment) {
+  if (!enrichment?.strategic_recommendations) return '<p>Strategic recommendation data not available.</p>';
+  const rec = enrichment.strategic_recommendations;
+
+  let html = '<p>📋 <strong>Strategic Tier Recommendations</strong></p>';
+
+  html += '<p style="margin-top:10px;"><span class="chat-tier-1">🟢 TIER 1 — Invest Heavily</span></p><ul>';
+  rec.tier_1_invest_heavily.forEach(t => {
+    html += `<li><strong>${t.partner}</strong>: ${t.rationale}<br><em>Action: ${t.action}</em></li>`;
+  });
+  html += '</ul>';
+
+  html += '<p><span class="chat-tier-2">🔵 TIER 2 — Grow Strategically</span></p><ul>';
+  rec.tier_2_grow_strategically.forEach(t => {
+    html += `<li><strong>${t.partner.replace('WPP_EMEA - ','')}</strong>: ${t.rationale}<br><em>Action: ${t.action}</em></li>`;
+  });
+  html += '</ul>';
+
+  html += '<p><span class="chat-tier-3">🟡 TIER 3 — Monitor & Develop</span></p><ul>';
+  rec.tier_3_monitor_and_develop.forEach(t => {
+    html += `<li><strong>${t.partner.replace('WPP_EMEA - ','')}</strong>: ${t.rationale}<br><em>Action: ${t.action}</em></li>`;
+  });
+  html += '</ul>';
+
+  html += '<p><span class="chat-tier-4">🔴 TIER 4 — Reassess</span></p><ul>';
+  rec.tier_4_reassess.forEach(t => {
+    html += `<li><strong>${t.partner.replace('WPP_EMEA - ','')}</strong>: ${t.rationale}<br><em>Action: ${t.action}</em></li>`;
+  });
+  html += '</ul>';
+
+  return html;
+}
+
+function handleInactivePartners(data, enrichment) {
+  const inactive = data.partners.filter(p => p.recent_merchant_count === 0);
+  let html = `<p>🔴 <strong>${inactive.length} inactive partners</strong> (zero merchants in 2024–2026):</p>`;
+  html += '<table class="chat-table"><tr><th>Partner</th><th>All-Time Merchants</th><th>Reason</th><th>Recommendation</th></tr>';
+
+  inactive.forEach(p => {
+    const en = enrichment?.partners?.find(e => e.partner_id === p.partner_id);
+    let reason = 'Unknown';
+    let recommendation = 'Review';
+    if (p.partner_name.includes('AKQA')) {
+      reason = 'Creative/innovation agency — not a commerce implementation partner';
+      recommendation = 'Deprioritize unless dedicated commerce practice built';
+    } else if (p.partner_name.includes('KPS')) {
+      reason = 'SAP Gold Partner — Shopify is secondary focus';
+      recommendation = 'Strategic conversation about Shopify commitment';
+    } else if (p.partner_name.includes('Intellias')) {
+      reason = 'Software engineering services — automotive/fintech focus';
+      recommendation = 'Low priority — monitor only';
+    }
+    html += `<tr><td><strong>${p.partner_name.replace('WPP_EMEA - ','')}</strong></td><td>${p.all_time_merchants}</td><td>${reason}</td><td>${recommendation}</td></tr>`;
+  });
+  html += '</table>';
+  html += '<p style="margin-top:8px;">All three inactive partners are classified as <span class="chat-tier-4">Tier 4 — Reassess</span>.</p>';
+  return html;
+}
+
+function handleTopDeals(data) {
+  const allMerchants = [];
+  data.partners.forEach(p => {
+    (p.merchants || []).forEach(m => {
+      if (m.deal_amount_usd && m.deal_amount_usd > 0) {
+        allMerchants.push({ ...m, partnerName: p.partner_name.replace('WPP_EMEA - ','') });
+      }
+    });
+  });
+  allMerchants.sort((a, b) => (b.deal_amount_usd || 0) - (a.deal_amount_usd || 0));
+  const top = allMerchants.slice(0, 8);
+
+  let html = '<p>🏆 <strong>Top Deals by Contract Value</strong></p>';
+  html += '<table class="chat-table"><tr><th>#</th><th>Merchant</th><th>Partner</th><th>Deal Value</th><th>GMV L365d</th><th>Launch Days</th></tr>';
+  top.forEach((m, i) => {
+    html += `<tr>
+      <td>${i+1}</td>
+      <td><strong>${m.shop_name}</strong></td>
+      <td>${m.partnerName}</td>
+      <td>${fmt.currency(m.deal_amount_usd)}</td>
+      <td>${m.gmv_usd_l365d ? fmt.currency(m.gmv_usd_l365d) : '—'}</td>
+      <td>${m.days_to_launch != null ? m.days_to_launch + 'd' : '—'}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  html += `<p style="margin-top:8px;">The largest deal is <strong>JD Sports / Size?</strong> at <span class="chat-highlight">$69.5M</span>, handled by FuseFabric. The top 3 deals are all FuseFabric or Wunderman Thompson.</p>`;
+  return html;
+}
+
+function handleEnterprisePartner(data, enrichment) {
+  return `<p>🏢 <strong>Best Partners for Enterprise Retailers</strong></p>
+    <p>Based on deal sizes, launch capability, and enterprise credentials:</p>
+    <table class="chat-table">
+      <tr><th>Rank</th><th>Partner</th><th>Avg Deal Value</th><th>Key Enterprise Clients</th><th>Avg Launch Time</th></tr>
+      <tr><td>🥇</td><td><strong>FuseFabric</strong></td><td>${fmt.currency(31031221.78)}</td><td>JD Sports, Fenwick, Escentual, Boden, Pepco</td><td>121 days</td></tr>
+      <tr><td>🥈</td><td><strong>Wunderman Thompson</strong></td><td>${fmt.currency(33305270.83)}</td><td>Glanbia Body&amp;Fit, Optimum Nutrition</td><td>167 days</td></tr>
+      <tr><td>🥉</td><td><strong>Swanky UKI</strong></td><td>${fmt.currency(3218013.3)}</td><td>Computer Lounge, Cakesmiths, WeightWorld</td><td>216 days</td></tr>
+    </table>
+    <p style="margin-top:8px;"><strong>Top recommendation:</strong> <span class="chat-highlight">FuseFabric</span> — Shopify Platinum Partner, founded by two former global CTOs, Deloitte Digital alliance, UK eCommerce Agency of the Year. Fastest launches despite handling the largest deals. Ideal for complex enterprise migrations with ERP/OMS/PIM integrations.</p>`;
+}
+
+function handlePartnerProfile(partnerName, data, enrichment) {
+  const p = data.partners.find(d => d.partner_name === partnerName);
+  if (!p) return `<p>Could not find partner "${partnerName}" in the data.</p>`;
+
+  const en = enrichment?.partners?.find(e => e.partner_id === p.partner_id);
+  const tier = getPartnerTier(partnerName);
+  const displayName = partnerName.replace('WPP_EMEA - ', '');
+  const totalGMV = p.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0;
+  const we = en?.web_enrichment;
+
+  let html = `<p>📋 <strong>${displayName}</strong> <span class="tier-badge ${tier.css}" style="font-size:0.7rem;vertical-align:middle;">${tier.label}</span></p>`;
+
+  if (we?.tagline) html += `<p><em>"${we.tagline}"</em></p>`;
+
+  html += `<table class="chat-table">
+    <tr><td><strong>Recent Merchants</strong></td><td>${p.recent_merchant_count}</td></tr>
+    <tr><td><strong>All-Time Merchants</strong></td><td>${p.all_time_merchants}</td></tr>
+    <tr><td><strong>L365d GMV</strong></td><td>${totalGMV > 0 ? fmt.currency(totalGMV) : '—'}</td></tr>
+    <tr><td><strong>Avg Contract Value</strong></td><td>${p.average_contract_value_usd ? fmt.currency(p.average_contract_value_usd) : '—'}</td></tr>
+    <tr><td><strong>Avg Time to Launch</strong></td><td>${p.launch_timeline_metrics?.avg_days_to_launch ? Math.round(p.launch_timeline_metrics.avg_days_to_launch) + ' days' : '—'}</td></tr>
+    ${we?.founded_year ? `<tr><td><strong>Founded</strong></td><td>${we.founded_year}</td></tr>` : ''}
+    ${we?.company_size ? `<tr><td><strong>Size</strong></td><td>${we.company_size}</td></tr>` : ''}
+    ${we?.headquarters ? `<tr><td><strong>HQ</strong></td><td>${we.headquarters}</td></tr>` : ''}
+  </table>`;
+
+  if (we?.usp_value_proposition) {
+    html += `<p style="margin-top:8px;"><strong>USP:</strong> ${we.usp_value_proposition}</p>`;
+  }
+
+  if (we?.key_services?.length) {
+    html += `<p style="margin-top:8px;"><strong>Key Services:</strong> ${we.key_services.slice(0, 6).join(', ')}</p>`;
+  }
+
+  if (we?.industry_verticals?.length) {
+    html += `<p><strong>Industry Verticals:</strong> ${we.industry_verticals.slice(0, 6).join(', ')}</p>`;
+  }
+
+  if (p.top_3_deals_by_gmv?.length) {
+    html += '<p style="margin-top:8px;"><strong>Top Deals:</strong></p><ul>';
+    p.top_3_deals_by_gmv.forEach(d => {
+      html += `<li><strong>${d.shop_name}</strong> — GMV: ${fmt.currency(d.gmv_usd_l365d)}${d.deal_amount_usd ? ', Deal: ' + fmt.currency(d.deal_amount_usd) : ''}</li>`;
+    });
+    html += '</ul>';
+  }
+
+  if (we?.competitive_positioning) {
+    html += `<p style="margin-top:8px;"><strong>Strategic Positioning:</strong> ${we.competitive_positioning}</p>`;
+  }
+
+  return html;
+}
+
+function handleVerticalQuery(q, enrichment) {
+  if (!enrichment?.partners) return '<p>Enrichment data not available.</p>';
+
+  const verticalKeywords = {
+    'fashion': ['fashion', 'apparel', 'clothing'],
+    'beauty': ['beauty', 'cosmetic', 'fragrance'],
+    'food': ['food', 'beverage', 'f&b'],
+    'health': ['health', 'wellness', 'nutrition'],
+    'luxury': ['luxury', 'premium', 'heritage'],
+    'retail': ['retail', 'department', 'ecommerce'],
+    'automotive': ['automotive', 'car'],
+    'enterprise': ['enterprise'],
+  };
+
+  let matchedVertical = null;
+  for (const [name, keywords] of Object.entries(verticalKeywords)) {
+    if (keywords.some(k => q.includes(k))) { matchedVertical = name; break; }
+  }
+
+  if (!matchedVertical) return '<p>Please specify an industry vertical (e.g., fashion, beauty, health, food, luxury, enterprise, retail).</p>';
+
+  const matches = [];
+  enrichment.partners.forEach(ep => {
+    const verticals = (ep.web_enrichment?.industry_verticals || []).join(' ').toLowerCase();
+    if (verticalKeywords[matchedVertical].some(k => verticals.includes(k))) {
+      matches.push({
+        name: ep.partner_name.replace('WPP_EMEA - ', ''),
+        verticals: ep.web_enrichment.industry_verticals,
+        merchants: ep.recent_merchant_count,
+        tier: getPartnerTier(ep.partner_name)
+      });
+    }
+  });
+
+  if (matches.length === 0) return `<p>No partners found with strong <strong>${matchedVertical}</strong> vertical expertise.</p>`;
+
+  let html = `<p>🏷️ <strong>Partners with ${matchedVertical.charAt(0).toUpperCase() + matchedVertical.slice(1)} Expertise</strong></p>`;
+  html += '<table class="chat-table"><tr><th>Partner</th><th>Tier</th><th>Recent Merchants</th><th>Relevant Verticals</th></tr>';
+  matches.sort((a,b) => a.tier.tier - b.tier.tier);
+  matches.forEach(m => {
+    html += `<tr><td><strong>${m.name}</strong></td><td><span class="chat-tier-${m.tier.tier}">${m.tier.label}</span></td><td>${m.merchants}</td><td>${m.verticals.slice(0,3).join(', ')}</td></tr>`;
+  });
+  html += '</table>';
+  return html;
+}
+
+function handleGMVQuery(data) {
+  const gmvPartners = data.partners
+    .map(p => ({
+      name: p.partner_name.replace('WPP_EMEA - ',''),
+      gmv: p.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0,
+      merchants: p.recent_merchant_count
+    }))
+    .filter(p => p.gmv > 0)
+    .sort((a,b) => b.gmv - a.gmv);
+
+  let html = `<p>💰 <strong>L365d GMV by Partner</strong></p>
+    <p>Total across all partners: <span class="chat-highlight">${fmt.currency(data.overall_summary.total_gmv_l365d_usd)}</span></p>`;
+  html += '<table class="chat-table"><tr><th>Partner</th><th>L365d GMV</th><th>Merchants</th><th>Avg GMV/Merchant</th></tr>';
+  gmvPartners.forEach(p => {
+    html += `<tr><td><strong>${p.name}</strong></td><td>${fmt.currency(p.gmv)}</td><td>${p.merchants}</td><td>${fmt.currency(p.gmv / p.merchants)}</td></tr>`;
+  });
+  html += '</table>';
+  return html;
+}
+
+function handleGeoQuery(data) {
+  const breakdown = data.overall_summary.country_breakdown;
+  const sorted = Object.entries(breakdown).sort((a,b) => b[1] - a[1]);
+
+  let html = `<p>🌍 <strong>Geographic Distribution</strong> — ${data.overall_summary.total_merchants} merchants across ${sorted.length} countries</p>`;
+  html += '<table class="chat-table"><tr><th>Country</th><th>Merchants</th><th>Share</th></tr>';
+  sorted.forEach(([code, count]) => {
+    html += `<tr><td>${countryNames[code] || code}</td><td>${count}</td><td>${(count/data.overall_summary.total_merchants*100).toFixed(0)}%</td></tr>`;
+  });
+  html += '</table>';
+  html += `<p style="margin-top:8px;">The UK dominates with 57% of merchants. <strong>Swanky UKI</strong> has the broadest international reach (9 countries).</p>`;
+  return html;
+}
+
+function handleWPPQuery(data, enrichment) {
+  const wppPartners = data.partners.filter(p => p.partner_name.includes('WPP') || p.partner_name.includes('AKQA'));
+
+  let html = '<p>🏢 <strong>WPP Agency Partners Analysis</strong></p>';
+  html += '<table class="chat-table"><tr><th>Entity</th><th>Recent</th><th>All-Time</th><th>GMV</th><th>Status</th></tr>';
+  wppPartners.forEach(p => {
+    const gmv = p.merchants?.reduce((s,m) => s + (m.gmv_usd_l365d||0), 0) || 0;
+    const tier = getPartnerTier(p.partner_name);
+    html += `<tr><td><strong>${p.partner_name.replace('WPP_EMEA - ','')}</strong></td><td>${p.recent_merchant_count}</td><td>${p.all_time_merchants}</td><td>${gmv > 0 ? fmt.currency(gmv) : '—'}</td><td><span class="chat-tier-${tier.tier}">${tier.label}</span></td></tr>`;
+  });
+  html += '</table>';
+  html += `<p style="margin-top:8px;"><strong>Key insight:</strong> <strong>Wunderman Thompson UKI</strong> is the strongest WPP performer with $66M in Glanbia deals. VMLY&R has only 1 merchant. AKQA has zero Shopify activity — they are a creative/design agency, not a commerce partner.</p>
+    <p><strong>Post-merger risk:</strong> VML merger (VMLY&R + WT) may dilute Shopify capability. Recommend clarifying Shopify ownership within VML.</p>`;
+  return html;
+}
+
+function handleSummary(data) {
+  const s = data.overall_summary;
+  return `<p>📊 <strong>Portfolio Summary</strong> (Last 2 Years: Feb 2024 – Feb 2026)</p>
+    <table class="chat-table">
+      <tr><td><strong>Total Partners</strong></td><td>9 (6 active, 3 inactive)</td></tr>
+      <tr><td><strong>Total Merchants</strong></td><td>${s.total_merchants}</td></tr>
+      <tr><td><strong>Total L365d GMV</strong></td><td>${fmt.currency(s.total_gmv_l365d_usd)}</td></tr>
+      <tr><td><strong>Avg GMV/Merchant</strong></td><td>${fmt.currency(s.avg_gmv_per_merchant_l365d_usd)}</td></tr>
+      <tr><td><strong>Avg Time to Launch</strong></td><td>${Math.round(s.avg_days_to_launch)} days (median: ${Math.round(s.median_days_to_launch)})</td></tr>
+      <tr><td><strong>Plus Shop Rate</strong></td><td>${s.plus_shop_pct}%</td></tr>
+      <tr><td><strong>Primary Market</strong></td><td>UK (${s.country_breakdown.GB} of ${s.total_merchants} merchants)</td></tr>
+      <tr><td><strong>Countries Covered</strong></td><td>${Object.keys(s.country_breakdown).length}</td></tr>
+    </table>
+    <p style="margin-top:8px;"><strong>Top 3 partners by activity:</strong> Swanky UKI (29 merchants), Vervaunt (8), FuseFabric (5)</p>
+    <p><strong>Top 3 by GMV:</strong> Swanky UKI ($62.4M), FuseFabric ($54.5M), Wunderman Thompson ($29M)</p>`;
+}
+
+
 // ---- Initialize ----
 function initDashboard(merchantData, sfData) {
-  // Set last updated
   document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
-  // Render all sections
   renderKPIs(merchantData);
   renderPartnerTable(merchantData.partners, sfData.partners);
   initTableSort();
@@ -753,10 +1342,22 @@ function initDashboard(merchantData, sfData) {
   renderPartnerCards(merchantData, sfData.partners);
   renderOverviewCharts(merchantData);
   initNavigation();
+  initAIChat();
 
-  // Event listeners
   document.getElementById('table-search')?.addEventListener('input', updateTableSort);
   document.getElementById('filter-rep')?.addEventListener('change', updateTableSort);
   document.getElementById('filter-status')?.addEventListener('change', updateTableSort);
   document.getElementById('export-csv')?.addEventListener('click', exportTableCSV);
+}
+
+function initAIChat() {
+  const input = document.getElementById('ai-chat-input');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAIMessage();
+      }
+    });
+  }
 }
